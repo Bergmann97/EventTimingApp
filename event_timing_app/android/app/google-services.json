@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1075139333571-puh9guqlalj25l6o4kgn6ooeqlc6vet8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.event_timing_app",
+            "certificate_hash": "98fa460c0f3c606baf7d9ff46c219d25730571cf"
+          }
+        },
+        {
           "client_id": "1075139333571-evahbr6e6v1nn5tldb4hl27jntleutuq.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -1,3 +1,8 @@
+import 'package:event_timing_app/controllers/authentifications.dart';
+import 'package:event_timing_app/modules/dashboard/screens/eventScreen.dart';
+import 'package:event_timing_app/modules/dashboard/screens/loginScreen.dart';
+import 'package:event_timing_app/modules/dashboard/screens/signupScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,18 +21,24 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: EventPage(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class HomePage extends StatefulWidget {
+  String uid = "";
+
+  HomePage({Key? key, required this.uid}) : super(key: key);
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState(uid);
 }
 
 class _HomePageState extends State<HomePage> {
+
+  String uid = "";
+  _HomePageState(this.uid);
 
   final db = FirebaseFirestore.instance;
   String? event;
@@ -83,6 +94,20 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text("Event Timing App"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () => signOutUser().whenComplete(() {
+                User? user = FirebaseAuth.instance.currentUser;
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  (Route<dynamic> route) => false,
+                );
+              }),
+              icon: Icon(Icons.exit_to_app)
+            )
+          ],
+          automaticallyImplyLeading: true,
+          centerTitle: true,
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: db.collection("events").snapshots(),
@@ -94,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                   DocumentSnapshot ds = snapshot.data!.docs[index];   // TODO hier wird data received
                   return Container(
                     child: ListTile(
-                      title: Text(ds['event']),
+                      title: Text(ds['name']),
                       onLongPress: () {
                         // TODO == delete
                         db.collection("events").doc(ds.id).delete();
