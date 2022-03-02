@@ -13,6 +13,9 @@ class Event {
   TimeOfDay? _endTime;
   bool _generatedParticipants = false;
 
+  // TODO add participants
+  // TODO add started
+
   Event(
     String ownerId, 
     String name,
@@ -117,6 +120,19 @@ class Event {
   @override
   String toString() {
     return "Event '" + _name + "' from UID: " + _ownerID + "! Starting " + _startDate;
+  }
+
+  toJSON() {
+    return {
+      'name': _name,
+      'ownerID': _ownerID,
+      'startDate': _startDate,
+      'endDate': _endDate,
+      'startTime': _startTime,
+      'endTime': _endTime,
+      'maxNumParticipants': _maxNumParticipants,
+      'generatedParticipants': _generatedParticipants
+    };
   }
 
 }

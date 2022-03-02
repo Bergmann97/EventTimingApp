@@ -1,14 +1,20 @@
 enum Sex {
-  male,
-  female,
-  diverse,
-  none
+  Male,
+  Female,
+  Diverse,
+  None
+}
+
+extension ParseToString on Sex {
+  String toJSONString() {
+    return toString().split('.').last;
+  }
 }
 
 class Participant {
   String _firstName = "";
   String _secondName = "";
-  Sex _sex = Sex.none;
+  Sex _sex = Sex.None;
   int _age = -1;
   String _email = "";
   int _startNum = -1;
@@ -107,6 +113,20 @@ class Participant {
     // TODO: implement toString
     return _firstName + " " + _secondName + " (" + _startNum.toString() + ")";
   }
+
+  toJSON() {
+    return {
+      'firstName': _firstName,
+      'secondName': _secondName,
+      'sex': _sex.toJSONString(),
+      'age': _age,
+      'email': _email,
+      'startNum': _startNum,
+      'time': _time,
+      'place': _place,
+    };
+  }
+
 }
 
 
@@ -115,7 +135,7 @@ List<Participant> generateParticipantList(int maxNumParticipants) {
   List<Participant> participants = [];
 
   for (int i=1; i <= maxNumParticipants; i++) {
-    participants.add(Participant("", "", Sex.none, 0, "", i));
+    participants.add(Participant("", "", Sex.None, 0, "", i));
   }
 
   return participants;

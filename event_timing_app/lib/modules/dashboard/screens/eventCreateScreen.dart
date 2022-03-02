@@ -232,7 +232,7 @@ class _EventPageState extends State<EventPage> {
                     decoration: const InputDecoration(
                         border: OutlineInputBorder(), 
                         labelText: "Max. Number Participants"),
-                        keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "Please Enter Maximum Number of Participants!";
@@ -292,25 +292,14 @@ class _EventPageState extends State<EventPage> {
                         if (_value == 1) {
                           Event event = Event(uid, eventName!, startDateCtrl.text, endDateCtrl.text, maxNumParticipants!, true);
                           event.addParticipants(generateParticipantList(maxNumParticipants!));
-                          var event_tmp = {
-                            'id': event.getOwner(),
-                            'name': event.getName(),
-                            'startDate': event.getStartDate(),
-                            'endDate': event.getEndDate(),
-                            'startTime': event.getStartTime(context),
-                            'endTime': event.getEndTime(context) != null ? event.getEndTime(context) : '',
-                            'maxNumParticipants': event.getMaxNumParticipants(),
-                            // TODO'participants': event.getParticipants(),
-                            'generatedParticipants': event.hasGeneratedStartNum(),
-                          };
-                          db.collection("events").add(event_tmp);
+                          db.collection("events").add(event.toJSON());
                           Navigator.pop(context);
                           User? user = FirebaseAuth.instance.currentUser;
                           Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomePage(uid: user!.uid)));
                         } else if (_value == 2) {
                           Event event = Event(uid, eventName!, startDateCtrl.text, endDateCtrl.text, maxNumParticipants!, false);
                           User? user = FirebaseAuth.instance.currentUser;
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => ParticipantCreationPage(uid: user!.uid, event: event)));
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => ParticipantCreationPage()));
                         }
                       }
                     }, 

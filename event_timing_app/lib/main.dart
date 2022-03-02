@@ -1,7 +1,17 @@
 import 'package:event_timing_app/controllers/authentifications.dart';
-import 'package:event_timing_app/modules/dashboard/screens/eventScreen.dart';
+import 'package:event_timing_app/modules/dashboard/models/event.dart';
+import 'package:event_timing_app/modules/dashboard/models/participant.dart';
+import 'package:event_timing_app/modules/dashboard/screens/createParticipantsScreen.dart';
+import 'package:event_timing_app/modules/dashboard/screens/eventCreateScreen.dart';
+import 'package:event_timing_app/modules/dashboard/screens/eventViewScreen.dart';
 import 'package:event_timing_app/modules/dashboard/screens/loginScreen.dart';
+import 'package:event_timing_app/modules/dashboard/screens/participantScreen.dart';
+import 'package:event_timing_app/modules/dashboard/screens/commingEvent.dart';
+import 'package:event_timing_app/modules/dashboard/screens/startedEvent.dart';
 import 'package:event_timing_app/modules/dashboard/screens/signupScreen.dart';
+import 'package:event_timing_app/widgets/addParticipant.dart';
+import 'package:event_timing_app/widgets/old_commingEvent.dart';
+import 'package:event_timing_app/widgets/old_startedEvent.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +31,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: EventPage(),
+      home: HomePage(uid: "CHz78WQ60tbFYJDHMvT5tGba4dx2"),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -42,6 +52,34 @@ class _HomePageState extends State<HomePage> {
 
   final db = FirebaseFirestore.instance;
   String? event;
+
+  Sex sex = Sex.Diverse;
+  String? dropdownvalue;
+  String? dropdownvalue2;
+  String? dropdownvalue3;
+
+  String? firstName;
+  String? secondName;
+  String email = "";
+
+  String testEventId = "FNGwQBH8Dahc1V3iTNSA";
+
+  void showDialog2() {
+    GlobalKey<FormState> formKeyP = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return const AddParticipant();
+          }
+        );
+        
+      }
+    );
+
+  }
 
   // TODO hier wird data erstellt
   void showdialog() {
@@ -106,7 +144,7 @@ class _HomePageState extends State<HomePage> {
               icon: Icon(Icons.exit_to_app)
             )
           ],
-          automaticallyImplyLeading: true,
+          automaticallyImplyLeading: false,
           centerTitle: true,
         ),
         body: StreamBuilder<QuerySnapshot>(
@@ -119,14 +157,18 @@ class _HomePageState extends State<HomePage> {
                   DocumentSnapshot ds = snapshot.data!.docs[index];   // TODO hier wird data received
                   return Container(
                     child: ListTile(
-                      title: Text(ds['name']),
-                      onLongPress: () {
-                        // TODO == delete
-                        db.collection("events").doc(ds.id).delete();
-                      },
+                      title: Text(ds['name']), // TODO zeige Event cool an
                       onTap:  () {
-                        // TODO == Update
-                        db.collection("events").doc(ds.id).update({"event": "new Value"});
+                        if (ds['started']) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => StartedEvent(eventDoc: ds,))
+                          );
+                        } else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => CommingEvent(eventDoc: ds,))
+                          );
+                        }
+                        // db.collection("events").doc(ds.id).update({"event": "new Value"});
                       },
                     )
                   );
@@ -140,7 +182,7 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: showdialog,
+          onPressed: showDialog2,
           child: Icon(Icons.add),
         ),
       ),
