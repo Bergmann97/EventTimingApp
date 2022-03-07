@@ -2,21 +2,20 @@
 
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
-import 'package:demo_app/widgets/events_overview.dart';
-import 'package:demo_app/widgets/profil_view.dart';
-import 'package:demo_app/widgets/timer_view.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'dart:developer';
 
+// ignore: must_be_immutable
 class ViewEventPage extends StatefulWidget {
   Event event;
 
   ViewEventPage({Key? key, required this.event}) : super(key: key);
 
   @override
+  // ignore: no_logic_in_create_state
   _ViewEventPageState createState() => _ViewEventPageState(event: event);
 }
 
@@ -28,7 +27,9 @@ class _ViewEventPageState extends State<ViewEventPage> {
   double legendsize = 0.3;
   double legendsize2 = 0.2;
 
-  var dropdownvalue; 
+  bool _deleted = false;
+  String dropdownvalue = "DNS"; 
+
   var items = [    
     EventState.dns.stateToString(),
     EventState.dnf.stateToString(),
@@ -76,6 +77,113 @@ class _ViewEventPageState extends State<ViewEventPage> {
       ]
     );
   }
+
+  getDeleteDialog() async {
+    return showDialog(
+      context: context, 
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.all(40.0),
+          backgroundColor: Colors.transparent,
+          content: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: const Color.fromRGBO(232, 255, 24, 100),
+                width: 1,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+              color: const Color.fromARGB(255, 54, 107, 103),
+              boxShadow: const [
+                BoxShadow(
+                  blurRadius: 7,
+                  spreadRadius: 5,
+                  offset: Offset(0, 5), 
+                  color: Color.fromARGB(156, 22, 73, 69)
+                ),
+              ],
+            ),
+            height: MediaQuery.of(context).size.height * 0.15,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.01,
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  child: const Text(
+                    "Do you really want to delete this Event?",
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 231, 250, 60),
+                      fontWeight: FontWeight.bold
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.01,
+                ),
+                StatefulBuilder(
+                  builder: (BuildContext context, StateSetter deleteState) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            try {
+                              fb.deleteDocumentById("events_new", event.getEid());
+                              log("Deleted Event!");
+                              deleteState(() {
+                                _deleted = true;
+                                Navigator.of(context).pop();
+                              });
+                            } catch (e) {
+                              log(e.toString());
+                            }
+                          }, 
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
+                          ),
+                          child: const Text(
+                            "Yes, Delete!",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color.fromARGB(156, 9, 31, 29)
+                            ),
+                          )
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.05,
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }, 
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
+                          ),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color.fromARGB(156, 9, 31, 29)
+                            ),
+                          )
+                        ),
+                      ],
+                    );
+                  }
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
 
   getAlertDNFParticipantDialog(int i) {
     return showDialog(
@@ -162,7 +270,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
                       onChanged: (String? newValue) { 
                         dropDownState(() {
                           dropdownvalue = newValue!;
-                          print(dropdownvalue);
                         });
                       },
                     );
@@ -177,10 +284,10 @@ class _ViewEventPageState extends State<ViewEventPage> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          event.getParticipants()[i].setState(EventState.values[items.indexOf(dropdownvalue!)]);
+                          event.getParticipants()[i].setEventState(EventState.values[items.indexOf(dropdownvalue)]);
                           fb.updateDocumentById("events_new", event.getEid(), event.toJSON());
                         });
-                        print("state changed");
+                        log("State changed!");
                         Navigator.pop(context);
                       }, 
                       style: ButtonStyle(
@@ -200,7 +307,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        print("no change");
                         Navigator.pop(context);
                       }, 
                       style: ButtonStyle(
@@ -236,16 +342,14 @@ class _ViewEventPageState extends State<ViewEventPage> {
             alignment: Alignment.center,
             child: TextButton(
                   onPressed: () {
-                    // TODO:_ go to edit page -> Create Oage?
-                    print("Pressed Participant");
+                    // TODO: go to edit page -> Create Oage?
+                    log("Pressed Participant!");
                   }, 
                   onLongPress: () {
                     setState(() {
                       dropdownvalue = EventState.values[event.getParticipants()[i].getState()].stateToString();
                       if (event.getParticipants()[i].getState() != EventState.dnf.index) {
                         getAlertDNFParticipantDialog(i);
-                      } else {
-                        print("no change");
                       }
                     });
                   },
@@ -292,7 +396,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
             width: 1,
           ),
           borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-          color: Color.fromARGB(156, 54, 107, 103),
+          color: const Color.fromARGB(156, 54, 107, 103),
           boxShadow: const [
             BoxShadow(
               blurRadius: 7,
@@ -408,7 +512,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                     width: MediaQuery.of(context).size.width * legendsize,
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.circle,
                           color: Color.fromARGB(255, 231, 250, 60),
                           size: 15,
@@ -430,7 +534,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
         ),
       );
     } else {
-      return Text("create some");
+      return const Text("create some");
     }
   }
 
@@ -474,9 +578,13 @@ class _ViewEventPageState extends State<ViewEventPage> {
         ),
         actions: <Widget>[
           IconButton(
-            onPressed: () {
-              // TODO: Add an Alert Dialog that asks for delete
-              print("Deleted Event");
+            onPressed: () async {
+              await getDeleteDialog();
+              setState(() {
+                if (_deleted) {
+                  Navigator.of(context).pop();
+                }
+              });
             },
             icon: Icon(
               Icons.delete_sweep,
@@ -573,7 +681,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                         width: 1,
                       ),
                       borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                      color: Color.fromARGB(156, 54, 107, 103),
+                      color: const Color.fromARGB(156, 54, 107, 103),
                       boxShadow: const [
                         BoxShadow(
                           blurRadius: 7,
@@ -620,7 +728,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                               width: 1,
                             ),
                             borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                            color: Color.fromARGB(156, 54, 107, 103),
+                            color: const Color.fromARGB(156, 54, 107, 103),
                             boxShadow: const [
                               BoxShadow(
                                 blurRadius: 7,
@@ -664,7 +772,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                               width: 1,
                             ),
                             borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                            color: Color.fromARGB(156, 54, 107, 103),
+                            color: const Color.fromARGB(156, 54, 107, 103),
                             boxShadow: const [
                               BoxShadow(
                                 blurRadius: 7,
@@ -713,8 +821,8 @@ class _ViewEventPageState extends State<ViewEventPage> {
                 height: MediaQuery.of(context).size.height * 0.05,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO:_ go to edit page -> Create Oage?
-                    print("Edit Event");
+                    // TODO: go to edit page -> Create Oage?
+                    log("Edit Event");
                   }, 
                   child: Center(
                     child:Row(
@@ -759,8 +867,8 @@ class _ViewEventPageState extends State<ViewEventPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO
-          print("Add Participant");
+          // TODO: is  this needed?
+          log("Add Participant!");
         },
         child: const Icon(
           Icons.add, 

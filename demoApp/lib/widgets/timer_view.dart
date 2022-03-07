@@ -13,6 +13,6 @@ class _TimerViewState extends State<TimerView> {
 
   @override
   Widget build(BuildContext context) {
-    return Text("Timer");
+    return const Text("Timer");
   }
 }

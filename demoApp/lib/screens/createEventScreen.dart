@@ -1,14 +1,12 @@
 // ignore_for_file: file_names
 
 import 'package:demo_app/models/event.dart';
-import 'package:demo_app/widgets/events_overview.dart';
-import 'package:demo_app/widgets/profil_view.dart';
-import 'package:demo_app/widgets/timer_view.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer';
 
 class CreateEventPage extends StatefulWidget {
   const CreateEventPage({Key? key}) : super(key: key);
@@ -77,13 +75,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
       // print(event);
 
-      print(event);
+      log(event.toString());
 
       DocumentReference? res = await fb.addDocument("events_new", event.toJSON());
       fb.updateDocument("events_new", res!, {'eid': res.id});
       Navigator.of(context).pop();
     } catch(e) {
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -258,13 +256,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
                                   color: Color.fromRGBO(212, 233, 20, 100),
                                 ),
                               ),
-                              validator: (_val) {
-                                // TODO
-                              },
-                              onChanged: (val) {
-                                // TODO check input
-                                // eventname.text = val;
-                              },
+                              // TODO add validatort
+                              validator: null,
+                              // TODO check input
+                              onChanged: null,
                               keyboardType: TextInputType.text,
                             ),
                           ),
@@ -327,8 +322,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
                                 errorMaxLines: 3,
                               ),
                               keyboardType: TextInputType.number,
-                              validator: (value) {},
-                              onChanged: (value) {},
+                              // TODO: add validation
+                              validator: null,
+                              // TODO: check input
+                              onChanged: null,
                             ),
                           ),
                         ),
@@ -389,7 +386,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 height: MediaQuery.of(context).size.height * 0.05,
                 child: ElevatedButton(
                   onPressed: () {
-                    print("WTF");
                     createEvent();
                   }, 
                   child: const Text(
@@ -477,8 +473,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   dateCtrl.text = formatter.format(date);
                 }
               },
-              validator: (value) {},
-              onChanged: (value) {},
+              // TODO: add validation
+              validator: null,
+              // TODO: check input
+              onChanged: null,
             ),
           ),
           SizedBox(
@@ -524,8 +522,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   timeCtrl.text = formatTimeOfDay(time);
                 }
               },
-              validator: (value) {},
-              onChanged: (value) {},
+              // TODO: add validation
+              validator: null,
+              // TODO: check input
+              onChanged: null,
             ),
           ),
         ],

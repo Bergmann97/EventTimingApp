@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer';
+
 
 class EventView extends StatefulWidget {
   const EventView({Key? key}) : super(key: key);
@@ -54,8 +56,7 @@ class _EventViewState extends State<EventView> {
                 ),
               ),
               onPressed: () {
-                // TODO: Open Create Event Page
-                print("ADD EVENT");
+                log("Add Event!");
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateEventPage()));
               },
               child: Column(
@@ -123,7 +124,7 @@ class _EventViewState extends State<EventView> {
                             height: MediaQuery.of(context).size.height*0.1,
                             child: ElevatedButton(
                               onPressed: () {
-                                print(event['eid']);
+                                log(event['eid'] + "pressed");
                               },
                               style: ButtonStyle(
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -208,7 +209,7 @@ class _EventViewState extends State<EventView> {
                     }
                     break;
                   default:
-                    print("This should not happen");
+                    log("What happend here? Test");
                 }
               }
 

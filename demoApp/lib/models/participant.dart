@@ -57,7 +57,7 @@ class Participant {
     }
   }
 
-  setState(EventState state) {
+  setEventState(EventState state) {
     _state = state;
   }
 
@@ -75,7 +75,8 @@ class GeneratedParticipant extends Participant {
     _state = state;
   }
 
-  setState(EventState state) {
+  @override
+  setEventState(EventState state) {
     _state = state;
   }
 
@@ -96,15 +97,17 @@ class GeneratedParticipant extends Participant {
 }
 
 class CreatedParticipant extends Participant{
+  late String _uid;
   late String _firstName;
   late String _secondName;
   late String _birthdate;
   late Sex _sex;
-  String _time = "00:00:00";
-  String _place = "DNS";
+  final String _time = "00:00:00";
+  final String _place = "DNS";
   String _email = "";
 
   CreatedParticipant(
+    String uid, 
     int number,
     Sex sex,
     String firstName,
@@ -113,6 +116,7 @@ class CreatedParticipant extends Participant{
     EventState state,
     String? email,
   ) {
+    _uid = uid;
     _number = number;
     _sex = sex;
     _birthdate = birthdate;
@@ -129,6 +133,7 @@ class CreatedParticipant extends Participant{
   Sex getSex() => _sex;
   String getBirthDate() => _birthdate;
   String getEmail() => _email;
+  String getUID() => _uid;
 
   int getAge(){
     var now = DateTime.now();

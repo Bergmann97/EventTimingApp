@@ -6,6 +6,8 @@ import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer';
+
 
 class EventView extends StatefulWidget {
   const EventView({Key? key}) : super(key: key);
@@ -123,23 +125,15 @@ class _EventViewState extends State<EventView> {
                             height: MediaQuery.of(context).size.height*0.1,
                             child: ElevatedButton(
                               onPressed: () {
-                                List<Participant> participants = [];
-                                for (Map p in event["participants"]) {
+                                List<dynamic> participants = [];
+                                for (dynamic p in event["participants"]) {
                                   if (event['generatedParticipants']) {
                                     participants.add(GeneratedParticipant(
                                       p['number'],
                                       EventState.values[p['eventState']]
                                     ));
                                   } else {
-                                    participants.add(CreatedParticipant(
-                                      p['number'],
-                                      p["sex"],
-                                      p["firstname"],
-                                      p["secondname"],
-                                      p["eventState"],
-                                      p["age"],
-                                      p["email"],
-                                    ));
+                                    participants.add(p);
                                   }
                                 }
                                 Event eventT = Event(
@@ -243,7 +237,7 @@ class _EventViewState extends State<EventView> {
                     }
                     break;
                   default:
-                    print("This should not happen");
+                    log("What happend here? Events Overview");
                 }
               }
 

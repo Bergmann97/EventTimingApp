@@ -8,6 +8,7 @@ import 'package:demo_app/widgets/timer_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:developer';
 
 
 class HomePage extends StatefulWidget {
@@ -50,7 +51,7 @@ class _HomePageState extends State<HomePage> {
       Map<String, dynamic>? doc = await fb.getUserprofil("userprofiles", user.uid);
       return doc!["firstname"] + " " + doc["secondname"];
     } catch (e) {
-      print(e);
+      log(e.toString());
       return "Unknown";
     }
   }

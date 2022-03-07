@@ -1,12 +1,9 @@
 // ignore_for_file: file_names
 
-import 'package:demo_app/controllers/authentifications.dart';
-import 'package:demo_app/main.dart';
-import 'package:demo_app/widgets/loginform.dart';
-import 'package:demo_app/widgets/signupform.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:developer';
 
 class Authentication {
   static SnackBar customSnackBar({required String content}) {
@@ -65,7 +62,7 @@ class Authentication {
         );
       }
     } else {
-      print("Upsi");
+      log("What happend here? LoginScreen");
     }
 
     return user;
@@ -86,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
   String password = "";
   bool _isButtonDisabled = true;
   bool _passwordVisible = false;
-  String? _errorMsg = null;
+  String? _errorMsg;
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
   @override

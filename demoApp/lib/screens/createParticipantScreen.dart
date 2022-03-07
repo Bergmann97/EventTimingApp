@@ -1,15 +1,12 @@
 // ignore_for_file: file_names
 
-import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
-import 'package:demo_app/widgets/events_overview.dart';
-import 'package:demo_app/widgets/profil_view.dart';
-import 'package:demo_app/widgets/timer_view.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer';
 
 class CreateParticipantPage extends StatefulWidget {
   const CreateParticipantPage({Key? key}) : super(key: key);
@@ -57,6 +54,7 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
 
     try {
       CreatedParticipant p = CreatedParticipant(
+        "TBD",
         -1, 
         getSexFromString(genderItem), 
         firstNameCtrl.text, 
@@ -66,13 +64,13 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
         emailCtrl.text
       );
 
-      print(p);
+      log(p.toString());
 
       DocumentReference? res = await fb.addDocument("participants_new", p.toJSON());
       fb.updateDocument("participants_new", res!, {'uid': res.id, 'cid': user.uid});
       Navigator.of(context).pop();
     } catch (e) {
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -247,13 +245,10 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                                   color: Color.fromRGBO(212, 233, 20, 100),
                                 ),
                               ),
-                              validator: (_val) {
-                                // TODO
-                              },
-                              onChanged: (val) {
-                                // TODO check input
-                                // eventname.text = val;
-                              },
+                              // TODO: add validation
+                              validator: null,
+                              // TODO: check input
+                              onChanged: null,
                               keyboardType: TextInputType.name,
                             ),
                           ),
@@ -292,12 +287,10 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                                   color: Color.fromRGBO(212, 233, 20, 100),
                                 ),
                               ),
-                              validator: (_val) {
-                                // TODO
-                              },
-                              onChanged: (val) {
-                                // TODO check input
-                              },
+                              // TODO: add validation
+                              validator: null,
+                              // TODO check input
+                              onChanged: null,
                               keyboardType: TextInputType.name,
                             ),
                           ),
@@ -359,7 +352,6 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                                               onChanged: (String? newValue) { 
                                                 dropDownState(() {
                                                   genderItem = newValue!;
-                                                  print(genderItem);
                                                 });
                                               },
                                             );
@@ -372,7 +364,7 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                                 SizedBox(
                                   width: MediaQuery.of(context).size.width * 0.1,
                                 ),
-                                Container(
+                                SizedBox(
                                   width: MediaQuery.of(context).size.width * 0.35,
                                   height: MediaQuery.of(context).size.height * 0.12,
                                   child: Column(
@@ -424,12 +416,10 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                                             ageCtrl.text = formatter.format(date);
                                           }
                                         },
-                                        validator: (value) {
-                                          // TODO: check if given date implies 16 or older
-                                        },
-                                        onChanged: (value) {
-                                          // TODO
-                                        },
+                                        // TODO: check if given date implies 16 or older
+                                        validator: null,
+                                        // TODO: check input
+                                        onChanged: null,
                                       ),
                                     ],
                                   ),
@@ -479,13 +469,10 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                                   color: Color.fromRGBO(212, 233, 20, 100),
                                 ),
                               ),
-                              validator: (_val) {
-                                // TODO
-                              },
-                              onChanged: (val) {
-                                // TODO check input
-                                // eventname.text = val;
-                              },
+                              // TODO: add validation
+                              validator: null,
+                              // TODO: check input
+                              onChanged: null,
                               keyboardType: TextInputType.emailAddress,
                             ),
                           ),

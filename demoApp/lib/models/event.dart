@@ -1,4 +1,3 @@
-import 'package:demo_app/models/participant.dart';
 import 'package:intl/intl.dart';
 
 class EventDate {
@@ -49,7 +48,7 @@ class Event {
     DateFormat.Hm().format(DateTime.now()),
   );
   int _maxNumParticipants = 0;
-  List<Participant> _participants = [];
+  List<dynamic> _participants = [];
   bool _generatedParticipants = true;
 
   Event(
@@ -59,7 +58,7 @@ class Event {
     EventDate startdate,
     EventDate enddate,
     int maxNumParticipants,
-    List<Participant> participants,
+    List<dynamic> participants,
     bool generatedParticipants
   ) {
     _eid = eid;
@@ -70,7 +69,7 @@ class Event {
     _maxNumParticipants = maxNumParticipants;
     _generatedParticipants = generatedParticipants;
     if (_generatedParticipants && participants.isEmpty) {
-      _participants = List<GeneratedParticipant>.generate(_maxNumParticipants, (i) => GeneratedParticipant(i + 1, EventState.dns));    
+      _participants = List<dynamic>.generate(_maxNumParticipants, (i) => (i+1).toString());    
     } else {
       _participants = participants;
     }
@@ -85,7 +84,7 @@ class Event {
   EventDate getStartdate() => _startdate;
   EventDate getEnddate() => _enddate;
   int getMaxNumParticipants() => _maxNumParticipants;
-  List<Participant> getParticipants() => _participants;
+  List<dynamic> getParticipants() => _participants;
 
   bool isGenerated() => _generatedParticipants;
 
@@ -102,7 +101,7 @@ class Event {
   setMaxNumParticipants(int maxNumParticipants) {
     _maxNumParticipants = maxNumParticipants;
   }
-  setParticipants(List<Participant> participants) {
+  setParticipants(List<dynamic> participants) {
     _participants = participants;
   }
 
@@ -111,7 +110,7 @@ class Event {
     // TODO
   }
 
-  addParticipants(List<Participant> participants) {
+  addParticipants(List<dynamic> participants) {
     // TODO
   }
 
@@ -119,7 +118,7 @@ class Event {
     // TODO
   }
 
-  removeParticipants(List<Participant> participants) {
+  removeParticipants(List<dynamic> participants) {
     // TODO
   }
 
@@ -137,7 +136,8 @@ class Event {
       'startdate': _startdate.toJSON(),
       'enddate': _enddate.toJSON(),
       'maxNumParticipants': _maxNumParticipants,
-      'participants': _participants.map((e) => e.toJSON()).toList(),
+      'participants': _participants,
+      // 'participants': _participants.map((e) => e.toJSON()).toList(),
       'generatedParticipants': _generatedParticipants,
     };
   }

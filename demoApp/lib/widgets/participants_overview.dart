@@ -1,13 +1,12 @@
 import 'package:demo_app/controllers/firebase.dart';
-import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
-import 'package:demo_app/screens/createEventScreen.dart';
 import 'package:demo_app/screens/createParticipantScreen.dart';
-import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:demo_app/screens/viewParticipantScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer';
+
 
 class ParticipantView extends StatefulWidget {
   const ParticipantView({Key? key}) : super(key: key);
@@ -54,6 +53,7 @@ class _ParticipantViewState extends State<ParticipantView> {
 
   CreatedParticipant getParticipantFromSnapshot(participant) {
     return CreatedParticipant(
+      participant['uid'],
       participant['number'], 
       stringToSex(participant['sex']), 
       participant['firstname'], 
@@ -248,7 +248,7 @@ class _ParticipantViewState extends State<ParticipantView> {
                     }
                     break;
                   default:
-                    print("This should not happen");
+                    log("What happend here? participants Overview");
                 }
               }
               return SizedBox(

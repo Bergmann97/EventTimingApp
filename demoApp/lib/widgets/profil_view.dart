@@ -13,6 +13,6 @@ class _ProfilViewState extends State<ProfilView> {
 
   @override
   Widget build(BuildContext context) {
-    return Text("Profil");
+    return const Text("Profil");
   }
 }

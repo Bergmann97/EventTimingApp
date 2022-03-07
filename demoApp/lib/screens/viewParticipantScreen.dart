@@ -2,21 +2,21 @@
 
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
-import 'package:demo_app/widgets/events_overview.dart';
-import 'package:demo_app/widgets/profil_view.dart';
-import 'package:demo_app/widgets/timer_view.dart';
+import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'dart:developer';
 
+// ignore: must_be_immutable
 class ViewParticipantPage extends StatefulWidget {
   CreatedParticipant participant;
 
   ViewParticipantPage({Key? key, required this.participant}) : super(key: key);
 
   @override
+  // ignore: no_logic_in_create_state
   _ViewParticipantPageState createState() => _ViewParticipantPageState(participant: participant);
 }
 
@@ -27,6 +27,8 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
   FirebaseHelper fb = FirebaseHelper();
   double legendsize = 0.3;
   double legendsize2 = 0.2;
+
+  bool _deleted = false;
 
   var items = [    
     EventState.dns.stateToString(),
@@ -69,7 +71,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
 
   // ignore: unused_element
   _ViewParticipantPageState({Key? key, required this.participant});
-  
+
 
   TextStyle getTextStyle(double fontSize) {
     return TextStyle(
@@ -85,6 +87,113 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
       ]
     );
   }
+
+  getDeleteDialog() async {
+    return showDialog(
+      context: context, 
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.all(40.0),
+          backgroundColor: Colors.transparent,
+          content: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: const Color.fromRGBO(232, 255, 24, 100),
+                width: 1,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+              color: const Color.fromARGB(255, 54, 107, 103),
+              boxShadow: const [
+                BoxShadow(
+                  blurRadius: 7,
+                  spreadRadius: 5,
+                  offset: Offset(0, 5), 
+                  color: Color.fromARGB(156, 22, 73, 69)
+                ),
+              ],
+            ),
+            height: MediaQuery.of(context).size.height * 0.15,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.01,
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  child: const Text(
+                    "Do you really want to delete this participant?",
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 231, 250, 60),
+                      fontWeight: FontWeight.bold
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.01,
+                ),
+                StatefulBuilder(
+                  builder: (BuildContext context, StateSetter deleteState) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            try {
+                              fb.deleteDocumentById("participants_new", participant.getUID());
+                              log("Deleted Event!");
+                              deleteState(() {
+                                _deleted = true;
+                                Navigator.of(context).pop();
+                              });
+                            } catch (e) {
+                              log(e.toString());
+                            }
+                          }, 
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
+                          ),
+                          child: const Text(
+                            "Yes, Delete!",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color.fromARGB(156, 9, 31, 29)
+                            ),
+                          )
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.05,
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }, 
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
+                          ),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color.fromARGB(156, 9, 31, 29)
+                            ),
+                          )
+                        ),
+                      ],
+                    );
+                  }
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
 
   @override
   void initState() {
@@ -125,9 +234,13 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
         ),
         actions: <Widget>[
           IconButton(
-            onPressed: () {
-              // TODO: Add an Alert Dialog that asks for delete
-              print("Deleted Event");
+            onPressed: () async {
+              await getDeleteDialog();
+              setState(() {
+                if (_deleted) {
+                  Navigator.of(context).pop();
+                }
+              });
             },
             icon: Icon(
               Icons.delete_sweep,
@@ -294,7 +407,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                 width: 1,
                               ),
                               borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                              color: Color.fromARGB(156, 54, 107, 103),
+                              color: const Color.fromARGB(156, 54, 107, 103),
                               boxShadow: const [
                                 BoxShadow(
                                   blurRadius: 7,
@@ -318,7 +431,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                   getSexAsLetter(participant.getSex()),
                                   style: const TextStyle(
                                     fontSize: 17,
-                                    color: Color.fromARGB(255, 231, 250, 60),
+                                    color: Colors.white,
                                     shadows: [
                                       Shadow(
                                         offset: Offset(2,2),
@@ -344,7 +457,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                 width: 1,
                               ),
                               borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                              color: Color.fromARGB(156, 54, 107, 103),
+                              color: const Color.fromARGB(156, 54, 107, 103),
                               boxShadow: const [
                                 BoxShadow(
                                   blurRadius: 7,
@@ -368,7 +481,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                   participant.getAge().toString(),
                                   style: const TextStyle(
                                     fontSize: 17,
-                                    color: Color.fromARGB(255, 231, 250, 60),
+                                    color: Colors.white,
                                     shadows: [
                                       Shadow(
                                         offset: Offset(2,2),
@@ -425,7 +538,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                           participant.getEmail(),
                           style: const TextStyle(
                             fontSize: 15,
-                            color: Color.fromARGB(255, 231, 250, 60),
+                            color: Colors.white,
                             shadows: [
                               Shadow(
                                 offset: Offset(2,2),
@@ -442,9 +555,18 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                   SizedBox(
                     height: MediaQuery.of(context).size.height * 0.03,
                   ),
+                  Center(
+                    child: Text(
+                      "Participated Events",
+                      style: getTextStyle(17),
+                    ),
+                  ),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.01,
+                  ),
                   Container(
                     width: MediaQuery.of(context).size.width * 0.8,
-                    height: MediaQuery.of(context).size.height * 0.275,
+                    height: MediaQuery.of(context).size.height * 0.24,
                     alignment: Alignment.centerLeft,
                     decoration: BoxDecoration(
                       border: Border.all(
@@ -462,13 +584,190 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                         ),
                       ],
                     ),
-                    child: Text("PArticipated Events"),
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: db.collection("events_new").snapshots(),
+                      builder: (context, snapshot) {
+                        List<Widget> children = <Widget>[];
+                        if (snapshot.hasError) {
+                          children = <Widget>[
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 60,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Text('Error: ${snapshot.error}'),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text('Stack trace: ${snapshot.stackTrace}'),
+                            ),
+                          ];
+                        } else {
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.waiting:
+                              children = const <Widget>[
+                                SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: CircularProgressIndicator(),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 16),
+                                  child: Text('Awaiting Participants...'),
+                                )
+                              ];
+                              break;
+                            case ConnectionState.active:
+                              if (snapshot.hasData) {
+                                for (int i = 0; i < snapshot.data!.size; i++) {
+                                  DocumentSnapshot event = snapshot.data!.docs[i];
+                                  List parts = event['participants'];
+                                  if (parts.contains(participant.getUID())) {
+                                    children.add(
+                                      SizedBox(
+                                        width: MediaQuery.of(context).size.width*0.7,
+                                        height: MediaQuery.of(context).size.height*0.05,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            Event eventT = Event(
+                                              event['eid'],
+                                              user.uid,
+                                              event['name'],
+                                              EventDate.fromEventDate(
+                                                event['startdate']["date"], 
+                                                event['startdate']["time"], 
+                                              ),
+                                              EventDate.fromEventDate(
+                                                event['enddate']["date"], 
+                                                event['enddate']["time"],
+                                              ),
+                                              event['maxNumParticipants'], 
+                                              event['participants'],
+                                              event['generatedParticipants'], 
+                                            );
+                                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT)));
+                                            // CreatedParticipant p = getParticipantFromSnapshot(participant);
+                                            // Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewParticipantPage(participant: p)));
+                                          },
+                                          style: ButtonStyle(
+                                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(15.0),
+                                                side: const BorderSide(
+                                                  color: Color.fromARGB(255, 212, 233, 20),
+                                                  width: 1
+                                                ),
+                                              ),
+                                            ),
+                                            backgroundColor: MaterialStateProperty.all<Color>(
+                                              const Color.fromRGBO(49, 98, 94, 50),
+                                            ),
+                                          ),
+                                          child: Text(event['name'])
+                                        )
+                                      )
+                                    );
+                                  }
+                                }
+                              } else {
+                                return Column(
+                                  children: [
+                                    SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.03,
+                                    ),
+                                    Image.asset(
+                                      "lib/assets/Standing_Runner.png",
+                                      width: MediaQuery.of(context).size.height*0.1
+                                    ),
+                                    SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.03,
+                                    ),
+                                    const Text(
+                                      "Looks pretty empty here!\n",
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 231, 250, 60),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 25,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                );
+                              }
+                              break;
+                            default:
+                              log("What happend here? View Participant Screen!");
+                          }
+                        }
+                        return Container(
+                          height: MediaQuery.of(context).size.height*0.22,
+                          alignment: Alignment.topCenter,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Wrap(
+                              spacing: 8.0,
+                              runSpacing: 8.0,
+                              alignment: WrapAlignment.center,
+                              children: children,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.02,
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: MediaQuery.of(context).size.height * 0.05,
+              child: ElevatedButton(
+                onPressed: () {
+                  // TODO: go to edit page -> Create Oage?
+                  log("Edit Participant!");
+                }, 
+                child: Center(
+                  child:Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.edit,
+                        color: Color.fromARGB(156, 32, 68, 65),
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.02,
+                      ),
+                      const Text(
+                        "Edit Participant",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          color: Color.fromARGB(156, 9, 31, 29)
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                style: ButtonStyle(
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18.0),
+                      side: const BorderSide(
+                        color: Color.fromARGB(156, 32, 68, 65),
+                        width: 2
+                      ),
+                    ),
+                  ),
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                    const Color.fromARGB(255, 231, 250, 60),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

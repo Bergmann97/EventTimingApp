@@ -1,10 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:demo_app/controllers/authentifications.dart';
-import 'package:demo_app/main.dart';
-import 'package:demo_app/screens/homeScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 
 class SignupForm extends StatefulWidget {
