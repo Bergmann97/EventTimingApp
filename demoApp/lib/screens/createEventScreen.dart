@@ -2,6 +2,7 @@
 
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/controllers/firebase.dart';
+import 'package:demo_app/models/participant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
   User user = FirebaseAuth.instance.currentUser!;
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
-  TextEditingController eventname = TextEditingController();
+  TextEditingController eventnameCtrl = TextEditingController();
 
   TextEditingController startDateCtrl = TextEditingController();
   TextEditingController startTimeCtrl = TextEditingController();
@@ -29,6 +30,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
   TextEditingController endTimeCtrl = TextEditingController();
   
   TextEditingController numParticipantsCtrl = TextEditingController();
+
+  bool _buttondisabled = true;
 
   bool _onlyStartnumbers = false;
   final db = FirebaseFirestore.instance;
@@ -55,11 +58,23 @@ class _CreateEventPageState extends State<CreateEventPage> {
   void createEvent() async {
     FirebaseHelper fb = FirebaseHelper();
 
+    List<dynamic> participants = [];
+    if (!_onlyStartnumbers) {
+      for (int i = 0; i < int.parse(numParticipantsCtrl.text); i++) {
+        participants.add(
+          GeneratedParticipant(
+            i,
+            EventState.values[0]
+          ).toJSON()
+        );
+      }
+    }
+
     try{
       Event event = Event(
         "tmp",
         user.uid,
-        eventname.text,
+        eventnameCtrl.text,
         EventDate.fromEventDate(
           startDateCtrl.text, 
           startTimeCtrl.text, 
@@ -69,19 +84,68 @@ class _CreateEventPageState extends State<CreateEventPage> {
           endTimeCtrl.text,
         ),
         int.parse(numParticipantsCtrl.text),
-        [],
+        participants,
         !_onlyStartnumbers
       );
-
-      // print(event);
 
       log(event.toString());
 
       DocumentReference? res = await fb.addDocument("events_new", event.toJSON());
       fb.updateDocument("events_new", res!, {'eid': res.id});
       Navigator.of(context).pop();
+      log("event Created!");
     } catch(e) {
       log(e.toString());
+    }
+  }
+
+  int checkDates(String start, String end) {
+    int startYear = int.parse(start.split(".")[2]);
+    int startMonth = int.parse(start.split(".")[1]);
+    int startDay = int.parse(start.split(".")[0]);
+
+    int endYear = int.parse(end.split(".")[2]);
+    int endMonth = int.parse(end.split(".")[1]);
+    int endDay = int.parse(end.split(".")[0]);
+
+    if (endYear < startYear) {
+      return 2;
+    } else {  // endYear >= startYear
+      if (endMonth < startMonth) {
+        return 2;
+      } else {  // endMonth >= startMonth
+        if (endDay < startDay) {
+          return 2;
+        } else {  // endDay >= startDay
+          if (endDay == startDay) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }
+      }
+    }
+  }
+
+  bool checkTimes(String start, String end) {
+    int startH = int.parse(start.split(":")[0]);
+    int startM = int.parse(start.split(":")[1]);
+
+    int endH = int.parse(end.split(":")[0]);
+    int endM = int.parse(end.split(":")[1]);
+
+    if (endH < startH) {
+      return false;
+    } else {
+      if (endH == startH) {
+        if (endM <= startM) {
+          return false;
+        } else {  // endM > endM
+          return true;
+        }
+      } else {  // endH > startH
+        return true;
+      }
     }
   }
 
@@ -89,6 +153,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
   void initState() {
     super.initState();
     formkey = GlobalKey<FormState>();
+    _buttondisabled = true;
   }
 
   @override
@@ -230,7 +295,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width * 0.8,
                             child: TextFormField(
-                              controller: eventname,
+                              controller: eventnameCtrl,
                               style: const TextStyle(
                                 color: Colors.white,
                               ),
@@ -256,10 +321,17 @@ class _CreateEventPageState extends State<CreateEventPage> {
                                   color: Color.fromRGBO(212, 233, 20, 100),
                                 ),
                               ),
-                              // TODO add validatort
-                              validator: null,
-                              // TODO check input
-                              onChanged: null,
+                              validator: (_val) {
+                                if (_val!.isEmpty) {
+                                  return "Can't be empty";
+                                } else {
+                                  if (_val.length > 80) {
+                                    return "The title can have at most 80 characters";
+                                  } else {
+                                    return null;
+                                  }
+                                }
+                              },
                               keyboardType: TextInputType.text,
                             ),
                           ),
@@ -274,11 +346,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                getDatePicker("Start", startDateCtrl, startTimeCtrl),
+                                getDatePicker("Start", startDateCtrl, startTimeCtrl, false),
                                 SizedBox(
                                   width: MediaQuery.of(context).size.width * 0.1,
                                 ),
-                                getDatePicker("End", endDateCtrl, endTimeCtrl),
+                                getDatePicker("End", endDateCtrl, endTimeCtrl, true),
                               ],
                             )
                           ),
@@ -322,10 +394,37 @@ class _CreateEventPageState extends State<CreateEventPage> {
                                 errorMaxLines: 3,
                               ),
                               keyboardType: TextInputType.number,
-                              // TODO: add validation
-                              validator: null,
-                              // TODO: check input
-                              onChanged: null,
+                              validator: (_val) {
+                                if (_val!.isEmpty) {
+                                  return "Can't be empty";
+                                } else {
+                                  if (!RegExp(r'^[0-9]+$').hasMatch(_val)) {
+                                    return "This field cannot contain other than digits";
+                                  } else {
+                                    if (_val[0] == "0") {
+                                      return "The number must start with digit > 0";
+                                    } else {
+                                      return null;
+                                    }
+                                  }
+                                }
+                              },
+                              onChanged: (_val) {
+                                if (eventnameCtrl.text.isNotEmpty &&
+                                    startDateCtrl.text.isNotEmpty &&
+                                    startTimeCtrl.text.isNotEmpty &&
+                                    endDateCtrl.text.isNotEmpty &&
+                                    endTimeCtrl.text.isNotEmpty &&
+                                    numParticipantsCtrl.text.isNotEmpty) {
+                                  setState(() {
+                                    _buttondisabled = false;
+                                  });
+                                } else {
+                                  setState(() {
+                                    _buttondisabled = true;
+                                  });
+                                }
+                              },
                             ),
                           ),
                         ),
@@ -385,14 +484,17 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 width: MediaQuery.of(context).size.width * 0.5,
                 height: MediaQuery.of(context).size.height * 0.05,
                 child: ElevatedButton(
-                  onPressed: () {
-                    createEvent();
+                  onPressed: _buttondisabled ? null : () {
+                    if (formkey.currentState!.validate()) {
+                      createEvent();
+                    }
                   }, 
                   child: const Text(
-                    "Create",
+                    "Create Event",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 17,
+                      // color: _buttondisabled ? const Color.fromRGBO(232, 255, 24, 100) : Colors.white
                       color: Color.fromARGB(156, 9, 31, 29)
                     ),
                   ),
@@ -407,7 +509,9 @@ class _CreateEventPageState extends State<CreateEventPage> {
                       ),
                     ),
                     backgroundColor: MaterialStateProperty.all<Color>(
-                      const Color.fromARGB(255, 231, 250, 60),
+                      _buttondisabled ? 
+                        const Color.fromARGB(255, 145, 158, 31) : 
+                        const Color.fromARGB(255, 231, 250, 60),
                     ),
                   ),
                 ),
@@ -422,7 +526,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
   Widget getDatePicker(
     String title, 
     TextEditingController dateCtrl, 
-    TextEditingController timeCtrl
+    TextEditingController timeCtrl,
+    bool endIndicator
   ) {
     return Column(
         children: [
@@ -468,15 +573,30 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   firstDate: DateTime.now(), 
                   lastDate: DateTime(2300)
                 );
-                DateFormat formatter = DateFormat("dd.MM.yyy");
+                DateFormat formatter = DateFormat("dd.MM.yyyy");
                 if (date != null) {
                   dateCtrl.text = formatter.format(date);
                 }
               },
-              // TODO: add validation
-              validator: null,
-              // TODO: check input
-              onChanged: null,
+              validator: (_val) {
+                if (_val!.isEmpty) {
+                  return "Can't be empty";
+                } else {
+                  if (!RegExp(r'^\d{2}.\d{2}.\d{4}$').hasMatch(_val)) {
+                    return "The date needs the form of: dd.mm.yyyy";
+                  } else {
+                    if (endIndicator) {
+                      if (checkDates(startDateCtrl.text, _val) > 1) {
+                        return "The Enddate needs to be later than the start date!";
+                      } else {
+                        return null;
+                      }
+                    } else {
+                      return null;
+                    }
+                  }
+                }
+              },
             ),
           ),
           SizedBox(
@@ -522,10 +642,27 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   timeCtrl.text = formatTimeOfDay(time);
                 }
               },
-              // TODO: add validation
-              validator: null,
-              // TODO: check input
-              onChanged: null,
+              validator: (_val) {
+                if (_val!.isEmpty) {
+                  return "Can't be empty";
+                } else {
+                  if (RegExp(r'^\d{1}:\d{2}$').hasMatch(_val) || 
+                      RegExp(r'^\d{2}:\d{2}$').hasMatch(_val)) {
+                    if (endIndicator) {
+                      if (checkDates(startDateCtrl.text, endDateCtrl.text) == 1 && 
+                          !checkTimes(startTimeCtrl.text, _val)) {
+                            return "End time needs to be after start time!";
+                      } else {
+                        return null;
+                      }
+                    } else {
+                      return null;
+                    }
+                  } else {
+                    return "The time needs the form of: hh:mm";
+                  }
+                }
+              },
             ),
           ),
         ],

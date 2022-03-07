@@ -126,14 +126,16 @@ class _EventViewState extends State<EventView> {
                             child: ElevatedButton(
                               onPressed: () {
                                 List<dynamic> participants = [];
-                                for (dynamic p in event["participants"]) {
-                                  if (event['generatedParticipants']) {
+                                if (!event['generatedParticipants']) {
+                                  for (dynamic p in event["participants"]) {
+                                    participants.add(p);
+                                  }
+                                } else {
+                                  for (dynamic p in event["participants"]) {
                                     participants.add(GeneratedParticipant(
                                       p['number'],
                                       EventState.values[p['eventState']]
                                     ));
-                                  } else {
-                                    participants.add(p);
                                   }
                                 }
                                 Event eventT = Event(
@@ -152,6 +154,7 @@ class _EventViewState extends State<EventView> {
                                   participants,
                                   event['generatedParticipants'], 
                                 );
+                                log(eventT.toString());
                                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT)));
                               },
                               style: ButtonStyle(
