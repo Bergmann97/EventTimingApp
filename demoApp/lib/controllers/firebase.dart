@@ -27,6 +27,15 @@ class FirebaseHelper {
     }
   }
 
+  updateDocumentById(String collection, String docRef, Map<String, Object?> updatedData) async {
+    try {
+      db.collection(collection).doc(docRef).update(updatedData);
+      print("Document updated!");
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future<Map<String, dynamic>?> readDocument(String collection, DocumentReference docRef) async {
     try {
       var doc = await db.collection(collection).doc(docRef.id).get();
@@ -71,16 +80,27 @@ class FirebaseHelper {
           doc["eid"],
           doc["uid"],
           doc["name"],
-          DateTime.parse(doc["startdate"]),
-          DateTime.parse(doc["enddate"]),
+          doc["startdate"],
+          doc["enddate"],
           doc["maxNumParticipants"],
           doc["participants"],
+          doc["generatedParticipants"],
         );
         docs.add(event);
       });
     }
 
     return docs;
+  }
+
+  Future<Map<String, dynamic>?> getUserprofil(String collection, String uid) async {
+    try {
+      var doc = await db.collection(collection).doc(uid).get();
+      return doc.data();
+    } catch (e) {
+      print(e);
+      return null;
+    }
   }
 
 

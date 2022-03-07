@@ -23,10 +23,13 @@ class MyApp extends StatelessWidget {
       title: 'EventTimerApp Demo',
       theme: ThemeData(
         primarySwatch: Colors.green,
+        // primarySwatch: MaterialStateProperty.all<Color>(
+        //           Color.fromRGBO(49, 98, 94, 50),
+        //         ), Ma
         canvasColor: const Color.fromARGB(156, 32, 68, 65),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            primary: Colors.white,
+            primary: const Color.fromARGB(156, 32, 68, 65),
             backgroundColor: const Color.fromRGBO(232, 255, 24, 100),
           ),
         ),

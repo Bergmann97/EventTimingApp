@@ -84,41 +84,40 @@ class _EventPageState extends State<EventPage> {
                   ),
                   Row(
                     children: <Widget>[
-                      Expanded(
-                        child: TextFormField(
-                          readOnly: true,
-                          controller: startDateCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Start Date',
-                            //filled: true,
-                            icon: Icon(Icons.calendar_today),
-                            labelStyle:
-                                TextStyle(decorationStyle: TextDecorationStyle.solid),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please Enter Date";
-                            }
-                            return null;
-                          },
-                          onTap: () async {
-                            DateTime? date = DateTime(1900);
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            date = await showDatePicker(
-                              context: context, 
-                              initialDate: DateTime.now(), 
-                              firstDate: DateTime(1900, 1, 1, 1, 1), 
-                              lastDate: DateTime(2200),
-
-                            );
-                            DateFormat formatter = DateFormat("dd.MM.yyy");
-                            startDateCtrl.text = formatter.format(date!);
-                          },
-                          onChanged: (val) {
-                            startDate = val;
-                          },
-                        ),
-                      ),
+                      // Expanded(
+                      //   child: TextFormField(
+                      //     readOnly: true,
+                      //     controller: startDateCtrl,
+                      //     decoration: const InputDecoration(
+                      //       labelText: 'Start Date',
+                      //       //filled: true,
+                      //       icon: Icon(Icons.calendar_today),
+                      //       labelStyle:
+                      //           TextStyle(decorationStyle: TextDecorationStyle.solid),
+                      //     ),
+                      //     validator: (value) {
+                      //       if (value == null || value.isEmpty) {
+                      //         return "Please Enter Date";
+                      //       }
+                      //       return null;
+                      //     },
+                      //     onTap: () async {
+                      //       DateTime? date = DateTime(1900);
+                      //       FocusScope.of(context).requestFocus(FocusNode());
+                      //       date = await showDatePicker(
+                      //         context: context, 
+                      //         initialDate: DateTime.now(), 
+                      //         firstDate: DateTime(1900, 1, 1, 1, 1), 
+                      //         lastDate: DateTime(2200),
+                      //       );
+                      //       DateFormat formatter = DateFormat("dd.MM.yyy");
+                      //       startDateCtrl.text = formatter.format(date!);
+                      //     },
+                      //     onChanged: (val) {
+                      //       startDate = val;
+                      //     },
+                      //   ),
+                      // ),
                       Expanded(
                         child: TextFormField(
                           readOnly: true,

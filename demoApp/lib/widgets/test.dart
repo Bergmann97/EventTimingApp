@@ -1,11 +1,9 @@
 import 'package:demo_app/controllers/firebase.dart';
-import 'package:demo_app/models/event.dart';
-import 'package:demo_app/models/participant.dart';
 import 'package:demo_app/screens/createEventScreen.dart';
-import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class EventView extends StatefulWidget {
   const EventView({Key? key}) : super(key: key);
@@ -22,11 +20,11 @@ class _EventViewState extends State<EventView> {
   FirebaseHelper fb = FirebaseHelper();
   double buttonfactor = 0.45;
 
-  String getFormatedDateTime(Map startdate) {
-    // String date = DateFormat('dd.MM.yy').format(DateTime.parse(startdate));
-    // String time = DateFormat.Hm().format(DateTime.parse(startdate));
-    EventDate eventdate = EventDate().fromSnapshot(startdate);
-    return eventdate.getDate() + "\n" + eventdate.getTime();
+  String getFormatedDateTime(String startdate) {
+    String date = DateFormat('dd.MM.yy').format(DateTime.parse(startdate));
+    String time = DateFormat.Hm().format(DateTime.parse(startdate));
+
+    return date + "\n" + time;
   }
 
   @override
@@ -56,6 +54,8 @@ class _EventViewState extends State<EventView> {
                 ),
               ),
               onPressed: () {
+                // TODO: Open Create Event Page
+                print("ADD EVENT");
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateEventPage()));
               },
               child: Column(
@@ -123,55 +123,20 @@ class _EventViewState extends State<EventView> {
                             height: MediaQuery.of(context).size.height*0.1,
                             child: ElevatedButton(
                               onPressed: () {
-                                List<Participant> participants = [];
-                                for (Map p in event["participants"]) {
-                                  if (event['generatedParticipants']) {
-                                    participants.add(GeneratedParticipant(
-                                      p['number'],
-                                      EventState.values[p['eventState']]
-                                    ));
-                                  } else {
-                                    participants.add(CreatedParticipant(
-                                      p['number'],
-                                      p["sex"],
-                                      p["firstname"],
-                                      p["secondname"],
-                                      p["eventState"],
-                                      p["age"],
-                                      p["email"],
-                                    ));
-                                  }
-                                }
-                                Event eventT = Event(
-                                  event['eid'],
-                                  user.uid,
-                                  event['name'],
-                                  EventDate.fromEventDate(
-                                    event['startdate']["date"], 
-                                    event['startdate']["time"], 
-                                  ),
-                                  EventDate.fromEventDate(
-                                    event['enddate']["date"], 
-                                    event['enddate']["time"],
-                                  ),
-                                  event['maxNumParticipants'], 
-                                  participants,
-                                  event['generatedParticipants'], 
-                                );
-                                Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT)));
+                                print(event['eid']);
                               },
                               style: ButtonStyle(
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15.0),
                                     side: const BorderSide(
-                                      color: Color.fromARGB(255, 212, 233, 20),
+                                      color: Color.fromARGB(156, 32, 68, 65),
                                       width: 2
                                     ),
                                   ),
                                 ),
                                 backgroundColor: MaterialStateProperty.all<Color>(
-                                  const Color.fromRGBO(49, 98, 94, 50),
+                                  const Color.fromARGB(255, 231, 250, 60),
                                 ),
                               ),
                               child: Row(
@@ -181,7 +146,7 @@ class _EventViewState extends State<EventView> {
                                     getFormatedDateTime(event["startdate"]),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Color.fromARGB(255, 239, 255, 100),
+                                      color: Color.fromARGB(156, 32, 68, 65),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -190,7 +155,7 @@ class _EventViewState extends State<EventView> {
                                     decoration: const BoxDecoration(
                                       border: Border(
                                         right: BorderSide(
-                                          color: Color.fromARGB(255, 212, 233, 20),
+                                          color: Color.fromARGB(156, 32, 68, 65),
                                           width: 2,
                                         ),
                                       )
@@ -205,7 +170,7 @@ class _EventViewState extends State<EventView> {
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 20,
-                                        color: Color.fromARGB(255, 239, 255, 100),
+                                        color: Color.fromARGB(156, 32, 68, 65),
                                       ),
                                       textAlign: TextAlign.left,
                                     ),
@@ -248,7 +213,7 @@ class _EventViewState extends State<EventView> {
               }
 
               return SizedBox(
-                height: MediaQuery.of(context).size.height*0.6,
+                height: MediaQuery.of(context).size.height*0.5,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: Wrap(

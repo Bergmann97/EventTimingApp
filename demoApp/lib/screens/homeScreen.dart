@@ -1,8 +1,13 @@
 // ignore_for_file: file_names
 
+import 'package:demo_app/controllers/firebase.dart';
 import 'package:demo_app/widgets/events_overview.dart';
+import 'package:demo_app/widgets/participants_overview.dart';
+import 'package:demo_app/widgets/profil_view.dart';
+import 'package:demo_app/widgets/timer_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -13,10 +18,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   User user = FirebaseAuth.instance.currentUser!;
-  String _tmpText = "";
   int _selectedItem = 0;
+  final db = FirebaseFirestore.instance;
+
+  FirebaseHelper fb = FirebaseHelper();
+
+  List<Widget> bodies = [
+    const EventView(),
+    const ParticipantView(),
+    const TimerView(),
+    const ProfilView(),
+  ];
 
   Future signoutNew() async {
     await FirebaseAuth.instance.signOut();
@@ -25,12 +38,21 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _tmpText = user.email!;
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Future<String> getUserProfileName() async {
+    try {
+      Map<String, dynamic>? doc = await fb.getUserprofil("userprofiles", user.uid);
+      return doc!["firstname"] + " " + doc["secondname"];
+    } catch (e) {
+      print(e);
+      return "Unknown";
+    }
   }
 
   @override
@@ -73,42 +95,59 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
-          Container(
-            width: MediaQuery.of(context).size.width*0.7,
-            height: MediaQuery.of(context).size.width*0.1,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: const Color.fromRGBO(49, 98, 94, 100),
-                width: 1,
+          Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width*0.7,
+              height: MediaQuery.of(context).size.width*0.1,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: const Color.fromRGBO(49, 98, 94, 100),
+                  width: 1,
+                ),
+                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10),),
+                color: const Color.fromARGB(255, 231, 250, 60),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 7,
+                    spreadRadius: 5,
+                    offset: Offset(0, 5), 
+                    color: Color.fromARGB(156, 9, 31, 29)
+                  ),
+                ],
               ),
-              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10),),
-              color: const Color.fromARGB(255, 231, 250, 60),
-              boxShadow: const [
-                BoxShadow(
-                  blurRadius: 7,
-                  spreadRadius: 5,
-                  offset: Offset(0, 5), 
-                  color: Color.fromARGB(156, 9, 31, 29)
-                ),
-              ],
-            ),
-            // color: const Color.fromRGBO(232, 255, 24, 100),
-            child: const Center(
-              child: Text(
-                "Welcom Max Bergmann",
-                style: TextStyle(
-                  color: Color.fromRGBO(49, 98, 94, 50),
-                  fontWeight: FontWeight.bold,
-                ),
+              // color: const Color.fromRGBO(232, 255, 24, 100),
+              child: Center(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: db.collection("userprofiles").snapshots(),
+                  builder: (context, snapshot) {
+                    String name = "...";
+                    if (snapshot.hasData) {
+                      for (int i = 0; i < snapshot.data!.size; i++) {
+                        DocumentSnapshot ds = snapshot.data!.docs[i];
+                        if (ds["uid"] == user.uid) {
+                          name = ds['firstname'] + " " + ds["secondname"];
+                        }
+                      }
+                    }
+                    return Text(
+                      "Welcom " + name,
+                      style: const TextStyle(
+                        color: Color.fromRGBO(49, 98, 94, 50),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  }
+                )
               ),
             ),
           ),
-          const EventView(),
+          bodies[_selectedItem],
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.event), label: "Events"),
+          BottomNavigationBarItem(icon: Icon(Icons.contacts), label: "Participants"),
           BottomNavigationBarItem(icon: Icon(Icons.timer), label: "Timer"),
           BottomNavigationBarItem(icon: Icon(Icons.person_sharp), label: "Profil"),
         ],
