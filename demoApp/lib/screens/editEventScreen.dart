@@ -3,23 +3,28 @@
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:demo_app/models/participant.dart';
+import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer';
 
-class CreateEventPage extends StatefulWidget {
-  const CreateEventPage({Key? key}) : super(key: key);
+// ignore: must_be_immutable
+class EditEventPage extends StatefulWidget {
+  Event event;
+  EditEventPage({Key? key, required this.event}) : super(key: key);
 
   @override
-  _CreateEventPageState createState() => _CreateEventPageState();
+  // ignore: no_logic_in_create_state
+  _EditEventPageState createState() => _EditEventPageState(event: event);
 }
 
-class _CreateEventPageState extends State<CreateEventPage> {
+class _EditEventPageState extends State<EditEventPage> {
 
   User user = FirebaseAuth.instance.currentUser!;
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
+  Event event;
 
   TextEditingController eventnameCtrl = TextEditingController();
 
@@ -31,9 +36,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
   
   TextEditingController numParticipantsCtrl = TextEditingController();
 
+  _EditEventPageState({required this.event});
+
+
   bool _buttondisabled = true;
 
-  bool _onlyStartnumbers = false;
+  bool _manualParticipants = false;
   final db = FirebaseFirestore.instance;
   
   TextStyle formText = const TextStyle(
@@ -41,7 +49,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   fontSize: 20,
                   color: Color.fromARGB(255, 231, 250, 60)
                 );
-
+  FirebaseHelper fb = FirebaseHelper();
 
   String formatTimeOfDay(TimeOfDay time) {
     int hour = time.hour;
@@ -54,50 +62,330 @@ class _CreateEventPageState extends State<CreateEventPage> {
     }
   }
 
-  
-  void createEvent() async {
-    FirebaseHelper fb = FirebaseHelper();
+  void updateEvent() async {
+    // TODO: Wirft Fehler!
+    bool _changed = false;
 
-    List<dynamic> participants = [];
-    if (!_onlyStartnumbers) {
-      for (int i = 0; i < int.parse(numParticipantsCtrl.text); i++) {
-        participants.add(
-          GeneratedParticipant(
-            i,
-            EventState.values[0]
-          ).toJSON()
-        );
+    // changing the standard values
+    if (eventnameCtrl.text != event.getName() ||
+        startDateCtrl.text != event.getStartdate().getDate() ||
+        startTimeCtrl.text != event.getStartdate().getTime() ||
+        endDateCtrl.text != event.getEnddate().getDate() ||
+        endTimeCtrl.text != event.getEnddate().getTime()) {
+      log("Standard Values changed");
+      Map<String, dynamic> changes = {
+        'name': eventnameCtrl.text,
+        'startdate': {
+          'date': startDateCtrl.text,
+          'time': startTimeCtrl.text,
+        },
+        'enddate': {
+          'date': endDateCtrl.text,
+          'time': endTimeCtrl.text,
+        }
+      };
+
+      try {
+        await fb.updateDocumentById("events_new", event.getEid(), changes);
+        _changed = true;
+      } catch (e) {
+        log(e.toString());
       }
     }
 
-    try{
-      Event event = Event(
-        "tmp",
-        user.uid,
-        eventnameCtrl.text,
-        EventDate.fromEventDate(
-          startDateCtrl.text, 
-          startTimeCtrl.text, 
-        ),
-        EventDate.fromEventDate(
-          endDateCtrl.text, 
-          endTimeCtrl.text,
-        ),
-        int.parse(numParticipantsCtrl.text),
-        participants,
-        !_onlyStartnumbers
-      );
+    List changesParticipants = [];
 
-      log(event.toString());
+    // changing the participation type from generated to manual
+    if (event.isGenerated() && _manualParticipants) { // change
+      log("changed participant type to manual");
+      try {
+        // set flag to false and clear the participants
+        await fb.updateDocumentById(
+          "events_new", 
+          event.getEid(), 
+          {
+            'participants': [], 
+            'generatedParticipants': false
+          }
+        );
+        changesParticipants = [];
+        _changed = true;
+      } catch (e) {
+        log(e.toString());
+      }
+    } else {
+      // changing the participation type from manual to generated
+      if (!event.isGenerated() && !_manualParticipants) {
+        log("changed participant type to generated");
+        List newParticipants = [];
+        // generate the new participant list
+        for (int i = 0; i < int.parse(numParticipantsCtrl.text); i++) {
+          newParticipants.add(
+            {
+              'number': i+1,
+              'state': 0,
+            }
+          );
+        }
+        try {
+          // set the flag, add the generated participants and set maxNumPart
+          await fb.updateDocumentById(
+            "events_new", 
+            event.getEid(), 
+            {
+              'participants': newParticipants,
+              'generatedParticipants': true,
+              'maxNumParticipants': int.parse(numParticipantsCtrl.text),
+            }
+          );
+          changesParticipants = newParticipants;
+          _changed = true;
+        } catch (e) {
+          log(e.toString());
+        }
+      } else {  // not changing the participant type but the number of participants
+        log("no type change");
+        // adding more generated participants
+        if (!_manualParticipants && event.getMaxNumParticipants() < int.parse(numParticipantsCtrl.text)) {
+          log("increasing generated Participants");
+          List newParticipants = event.getParticipants().map((e) => e.toJSON()).toList();
+          for (int i = event.getMaxNumParticipants()-1; i < int.parse(numParticipantsCtrl.text); i++) {
+            newParticipants.add(
+              {
+                'number': i+1,
+                'state': 0,
+              }
+            );
+          }
+          try {
+            // set the flag, add the generated participants and set maxNumPart
+            await fb.updateDocumentById(
+              "events_new", 
+              event.getEid(), 
+              {
+                'participants': newParticipants,
+                'generatedParticipants': true,
+                'maxNumParticipants': int.parse(numParticipantsCtrl.text),
+              }
+            );
+            changesParticipants = newParticipants;
+            _changed = true;
+          } catch (e) {
+            log(e.toString());
+          }
+          log(newParticipants.toString());
+        } else {
+          // old participant list needs to be reduced
+          if (event.getMaxNumParticipants() > int.parse(numParticipantsCtrl.text)) {
+            log("decreasing any kind of Participants");
+            List newParticipants = [];
+            List old = event.getParticipants();
+            int counter = 0;
+            for (var item in old) {
+              newParticipants.add(item);
+              counter++;
+              if (counter >= event.getMaxNumParticipants()) {break;}
+            }
 
-      DocumentReference? res = await fb.addDocument("events_new", event.toJSON());
-      fb.updateDocument("events_new", res!, {'eid': res.id});
-      Navigator.of(context).pop();
-      log("event Created!");
-    } catch(e) {
-      log(e.toString());
+            // for (int i = 0; i < event.getMaxNumParticipants() || i >= old.length; i++) {
+            //   newParticipants.add(
+            //     old[i]
+            //   );
+            // }
+            try {
+              // set the flag, add the generated participants and set maxNumPart
+              await fb.updateDocumentById(
+                "events_new", 
+                event.getEid(), 
+                {
+                  'participants': newParticipants,
+                  'maxNumParticipants': int.parse(numParticipantsCtrl.text),
+                }
+              );
+              changesParticipants = newParticipants;
+              _changed = true;
+            } catch (e) {
+              log(e.toString());
+            }
+            log(newParticipants.toString());
+          } else {
+            // manual created participants and expansion of them
+            if (_manualParticipants && event.getMaxNumParticipants() < int.parse(numParticipantsCtrl.text)) {
+              log("increasing for manual Participants");
+              try {
+                // set the flag, add the generated participants and set maxNumPart
+                await fb.updateDocumentById(
+                  "events_new", 
+                  event.getEid(), 
+                  {
+                    'maxNumParticipants': int.parse(numParticipantsCtrl.text),
+                  }
+                );
+                _changed = true;
+              } catch (e) {
+                log(e.toString());
+              }
+            }
+          }
+        }
+
+        if (event.getMaxNumParticipants() != int.parse(numParticipantsCtrl.text)) {
+          log("number participants changed");
+          Map<String, dynamic> changes = {
+            "maxNumParticipants": int.parse(numParticipantsCtrl.text),
+          };
+
+          try {
+            await fb.updateDocumentById(
+              "events_new", 
+              event.getEid(), 
+              changes
+            );
+            _changed = true;
+          } catch (e) {
+            log(e.toString());
+          }
+        }
+      }
     }
+
+    Event nEvent = Event(
+      event.getEid(),
+      user.uid,
+      eventnameCtrl.text,
+      EventDate.fromEventDate(
+        startDateCtrl.text,
+        startTimeCtrl.text
+      ),
+      EventDate.fromEventDate(
+        endDateCtrl.text,
+        endTimeCtrl.text
+      ),
+      int.parse(numParticipantsCtrl.text),
+      changesParticipants,
+      _manualParticipants,
+    );
+
+    log(changesParticipants.toString());
+
+    if (_changed) {
+      log("Event needs to be updated");
+      Navigator.pop(context, nEvent);
+      // Navigator.pushReplacement(
+      //   context, 
+      //   MaterialPageRoute(
+      //     builder: (context) => 
+      //     ViewEventPage(event: nEvent,)
+      //   )
+      // );
+      // Navigator.of(context).pushReplacement(
+      //   MaterialPageRoute(
+      //     builder: (context) => ViewEventPage(event: nEvent, generated: !_manualParticipants,)
+      //   )
+      // );
+    } else {
+      log("Event did not change");
+      setState(() {
+        Navigator.of(context).pop();
+      });
+    }
+    
+        // if (e.getName() != event.getName() ||
+    //     e.getStartdate().getDate() != event.getStartdate().getDate() ||
+    //     e.getStartdate().getTime() != event.getStartdate().getTime() ||
+    //     e.getEnddate().getDate() != event.getEnddate().getDate() ||
+    //     e.getEnddate().getTime() != event.getEnddate().getTime() ||
+    //     e.isGenerated() != event.isGenerated()) {
+
+    //   List newParticipants = [];
+    //   if (event.isGenerated() && !e.isGenerated()) {
+    //     newParticipants = [];
+    //   } else {
+    //     if (!event.isGenerated() && e.isGenerated()) {
+    //       if (e.getMaxNumParticipants() != event.getMaxNumParticipants()) {
+    //         newParticipants = [];
+    //         for (int i = event.getMaxNumParticipants(); i < int.parse(numParticipantsCtrl.text); i++) {
+    //           newParticipants.add(
+    //             GeneratedParticipant(
+    //               i,
+    //               EventState.values[0]
+    //             )
+    //           );
+    //         }
+    //       } else {
+    //         newParticipants = [];
+    //         for (int i = 0; i < event.getMaxNumParticipants(); i++) {
+    //           newParticipants.add(
+    //             GeneratedParticipant(
+    //               i,
+    //               EventState.values[0]
+    //             )
+    //           );
+    //         }
+    //       }
+    //     } else {
+    //       if (e.isGenerated() && e.getMaxNumParticipants() > event.getMaxNumParticipants()) {
+    //         newParticipants = event.getParticipants();
+    //         for (int i = event.getMaxNumParticipants(); i < int.parse(numParticipantsCtrl.text); i++) {
+    //           newParticipants.add(
+    //             GeneratedParticipant(
+    //               i,
+    //               EventState.values[0]
+    //             )
+    //           );
+    //         }
+    //       } else {
+    //         if (e.isGenerated() && e.getMaxNumParticipants() < event.getMaxNumParticipants()) {
+    //           for (int i = 0; i < e.getMaxNumParticipants(); i++) {
+    //             newParticipants.add(event.getParticipants()[i]);
+    //           }
+    //         } else {
+    //           newParticipants = event.getParticipants();
+    //         }
+    //       } 
+    //     }
+    //   }
+
+    //   if (newParticipants != e.getParticipants()) {
+    //     e.setParticipants(newParticipants);
+    //     log("Change");
+    //     // log(newParticipants.toString());
+    //   }
+
+
+    //   try{
+    //     log(event.toString());
+
+    //     Map<String, dynamic> changes = {
+    //       'eid': event.getEid(),
+    //       'uid': e.getUid(),
+    //       'name': e.getName(),
+    //       'startdate': e.getStartdate().toJSON(),
+    //       'enddate': e.getEnddate().toJSON(),
+    //       'maxNumParticipants': e.getMaxNumParticipants(),
+    //       'participants': newParticipants.map((e) => e.toJSON()).toList(),
+    //       'generatedParticipants': e.isGenerated(),
+    //     };
+
+    //     // log(newParticipants.map((e) => e.toJSON()).toList().toString());
+    //     log(changes.toString());
+
+    //     await fb.updateDocumentById("events_new", event.getEid(), changes);
+    //     log("Event updated!");
+    //     Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(
+    //         builder: (context) => 
+    //           ViewEventPage(event: e,)
+    //       )
+    //     );
+    //   } catch(e) {
+    //     log(e.toString());
+    //   }
+    // } else {
+    //   log("No Changes");
+    // }
   }
+
 
   int checkDates(String start, String end) {
     int startYear = int.parse(start.split(".")[2]);
@@ -154,6 +442,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
     super.initState();
     formkey = GlobalKey<FormState>();
     _buttondisabled = true;
+    eventnameCtrl.text = event.getName();
+    startDateCtrl.text = event.getStartdate().getDate();
+    startTimeCtrl.text = event.getStartdate().getTime();
+    endDateCtrl.text = event.getEnddate().getDate();
+    endTimeCtrl.text = event.getEnddate().getTime();
+    numParticipantsCtrl.text = event.getMaxNumParticipants().toString();
+    _manualParticipants = !event.isGenerated();
   }
 
   @override
@@ -187,6 +482,18 @@ class _CreateEventPageState extends State<CreateEventPage> {
         centerTitle: true,
         iconTheme: const IconThemeData(
           color: Color.fromARGB(255, 239, 255, 100)
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back, 
+            color: Color.fromARGB(255, 239, 255, 100)
+          ),
+          onPressed: () {
+            Navigator.pop(
+              context, 
+              event,
+            );
+          },
         ),
       ),
       body: SizedBox(
@@ -452,10 +759,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Switch(
-                                  value: _onlyStartnumbers, 
+                                  value: _manualParticipants, 
                                   onChanged: (value) {
                                     setState(() {
-                                      _onlyStartnumbers = value;
+                                      _manualParticipants = value;
+                                      _buttondisabled = false;
                                     });
                                   },
                                   activeColor: const Color.fromRGBO(212, 233, 20, 100),
@@ -502,11 +810,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 child: ElevatedButton(
                   onPressed: _buttondisabled ? null : () {
                     if (formkey.currentState!.validate()) {
-                      createEvent();
+                      updateEvent();
                     }
                   }, 
                   child: const Text(
-                    "Create Event",
+                    "Confirm Changes",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 17,
@@ -592,6 +900,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 DateFormat formatter = DateFormat("dd.MM.yyyy");
                 if (date != null) {
                   dateCtrl.text = formatter.format(date);
+                  setState(() {
+                    _buttondisabled = false;
+                  });
+                } else {
+                  setState(() {
+                    _buttondisabled = true;
+                  });
                 }
               },
               validator: (_val) {
@@ -672,6 +987,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 );
                 if (time != null) {
                   timeCtrl.text = formatTimeOfDay(time);
+                  setState(() {
+                    _buttondisabled = false;
+                  });
+                } else {
+                  setState(() {
+                    _buttondisabled = true;
+                  });
                 }
               },
               validator: (_val) {

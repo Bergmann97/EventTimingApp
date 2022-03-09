@@ -81,17 +81,31 @@ class GeneratedParticipant extends Participant {
   }
 
   @override
+  int getState() {
+    if (_state != null) {
+      return _state!.index;
+    } else {
+      return 0;
+    }
+  }
+
+  @override
   Map toJSON() {
     return {
       'number': _number,
-      'eventState': _state!.index,
+      'state': _state!.index,
     };
+  }
+
+  @override
+  String toString() {
+    return _number.toString() + ": " + _state.toString();
   }
 
   GeneratedParticipant fromSnapshot(Map snapshot) {
     return GeneratedParticipant(
       snapshot["startnumber"], 
-      snapshot["eventState"], 
+      snapshot["state"], 
     );
   }
 }
@@ -163,5 +177,10 @@ class CreatedParticipant extends Participant{
       'state': _state!.stateToString(),
       'email': _email
     };
+  }
+
+  @override
+  String toString() {
+    return _firstName + " " + _secondName;
   }
 }

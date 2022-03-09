@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'dart:developer';
 
 class EventDate {
   String _date = "";
@@ -129,6 +130,11 @@ class Event {
   }
 
   toJSON() {
+    // log(_participants.toString());
+    // log(_generatedParticipants.toString());
+    // log(_participants.map((e) {
+    //     return _generatedParticipants ? e : e.getUID();
+    //   }).toList().toString());
     return {
       'eid': _eid,
       'uid': _uid,
@@ -136,8 +142,10 @@ class Event {
       'startdate': _startdate.toJSON(),
       'enddate': _enddate.toJSON(),
       'maxNumParticipants': _maxNumParticipants,
-      'participants': _participants,
-      // 'participants': _participants.map((e) => e.toJSON()).toList(),
+      // 'participants': _participants,
+      'participants': _participants.map((e) {
+        return _generatedParticipants ? e : e.getUID();
+      }).toList(),
       'generatedParticipants': _generatedParticipants,
     };
   }

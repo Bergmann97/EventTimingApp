@@ -171,6 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                                 width: MediaQuery.of(context).size.width * 0.4222,
                                 height: MediaQuery.of(context).size.height * 0.07,
                                 child: ElevatedButton(
+                                  // TODO: add validation
                                   onPressed: () => setState(() => loginstate = true),
                                   child: Text("Login", style: TextStyle(
                                     fontSize: 20,
@@ -193,6 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                                 width: MediaQuery.of(context).size.width * 0.4222,
                                 height: MediaQuery.of(context).size.height * 0.07,
                                 child: ElevatedButton(
+                                  // TODO: add validation
                                   onPressed: () => setState(() => loginstate = false),
                                   child: Text("Signup", style: TextStyle(
                                     fontSize: 20, 
@@ -420,6 +422,7 @@ class _LoginPageState extends State<LoginPage> {
                                                     color: Color.fromRGBO(70, 139, 133, 100),
                                                   ),
                                                 ),
+                                                // TODO: add validation
                                                 onPressed: () => googleSignUpNew(context),
                                                 child: Row(
                                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -449,6 +452,7 @@ class _LoginPageState extends State<LoginPage> {
                                                   color: _isButtonDisabled ? const Color.fromRGBO(232, 255, 24, 100) : const Color.fromRGBO(70, 139, 133, 100),
                                                 ),
                                               ),
+                                              // TODO: add validation
                                               onPressed: _isButtonDisabled ? null : () => signUpNew(email, password),
                                               child: Text(
                                                 "SignUp",
@@ -470,6 +474,7 @@ class _LoginPageState extends State<LoginPage> {
                                                   color: Color.fromRGBO(70, 139, 133, 100),
                                                 ),
                                               ),
+                                              // TODO: add validation
                                               onPressed: () => googleSignUpNew(context),
                                               child: Row(
                                                 mainAxisAlignment: MainAxisAlignment.center,

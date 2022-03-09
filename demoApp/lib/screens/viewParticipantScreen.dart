@@ -2,6 +2,7 @@
 
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
+import 'package:demo_app/screens/editParticipantScreen.dart';
 import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,6 +28,14 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
   FirebaseHelper fb = FirebaseHelper();
   double legendsize = 0.3;
   double legendsize2 = 0.2;
+
+
+  TextEditingController nameCtrl = TextEditingController();
+  TextEditingController genderCtrl = TextEditingController();
+  TextEditingController ageCtrl = TextEditingController();
+  TextEditingController emailCtrl = TextEditingController();
+  TextEditingController birthdateCtrl = TextEditingController();
+
 
   bool _deleted = false;
 
@@ -57,6 +66,38 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
       default: 
         return -1; 
     }
+  }
+
+  Sex stringToSex(String sex) {
+    switch (sex) {
+      case "male": return Sex.male;
+      case "female": return Sex.female;
+      case "diverse": return Sex.diverse;
+      default: return Sex.none;
+    }
+  }
+
+  EventState stringToState(String state) {
+    switch (state) {
+      case "DNS": return EventState.dns;
+      case "DNF": return EventState.dnf;
+      case "FINISHED": return EventState.finished;
+      case "RUNNING": return EventState.running;
+      default: return EventState.none;
+    }
+  }
+
+  Future<CreatedParticipant> getParticipantFromSnapshot(participant) async {
+    return CreatedParticipant(
+      participant['uid'],
+      participant['number'], 
+      stringToSex(participant['sex']), 
+      participant['firstname'], 
+      participant['secondname'], 
+      participant["birthdate"], 
+      stringToState(participant['state']), 
+      participant['email'], 
+    );
   }
 
   getSexAsLetter(Sex sex) {
@@ -198,6 +239,15 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
   @override
   void initState() {
     super.initState();
+    nameCtrl.text = participant.getFirstname() + "\n" + participant.getSecondname();
+    genderCtrl.text = getSexAsLetter(participant.getSex());
+    ageCtrl.text = participant.getAge().toString();
+    birthdateCtrl.text = participant.getBirthDate();
+    if (participant.getEmail().isEmpty) {
+      emailCtrl.text = "not given";
+    } else {
+      emailCtrl.text = participant.getEmail();
+    }
   }
 
   @override
@@ -249,6 +299,15 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
             )
           )
         ],
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back, 
+            color: Color.fromARGB(255, 239, 255, 100)
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
       ),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
@@ -348,7 +407,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                       ],
                     ),
                     child: Text(
-                      participant.getFirstname() + "\n" + participant.getSecondname(),
+                      nameCtrl.text,
                       style: getTextStyle(25),
                       textAlign: TextAlign.center,
                     ),
@@ -377,7 +436,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                       ],
                     ),
                     child: Text(
-                      "*" + participant.getBirthDate(),
+                      "*" + birthdateCtrl.text,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -428,7 +487,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                   height: MediaQuery.of(context).size.height * 0.01,
                                 ),
                                 Text(
-                                  getSexAsLetter(participant.getSex()),
+                                  genderCtrl.text,
                                   style: const TextStyle(
                                     fontSize: 17,
                                     color: Colors.white,
@@ -478,7 +537,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                   height: MediaQuery.of(context).size.height * 0.01,
                                 ),
                                 Text(
-                                  participant.getAge().toString(),
+                                  ageCtrl.text,
                                   style: const TextStyle(
                                     fontSize: 17,
                                     color: Colors.white,
@@ -535,7 +594,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                           width: MediaQuery.of(context).size.width * 0.02,
                         ),
                         Text(
-                          participant.getEmail(),
+                          emailCtrl.text,
                           style: const TextStyle(
                             fontSize: 15,
                             color: Colors.white,
@@ -647,7 +706,7 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                                               event['participants'],
                                               event['generatedParticipants'], 
                                             );
-                                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT)));
+                                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT,)));
                                             // CreatedParticipant p = getParticipantFromSnapshot(participant);
                                             // Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewParticipantPage(participant: p)));
                                           },
@@ -728,8 +787,15 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
               height: MediaQuery.of(context).size.height * 0.05,
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: go to edit page -> Create Oage?
-                  log("Edit Participant!");
+                  setState(() {
+                    log("Edit Participant!");
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) 
+                          => EditParticipantPage(participant: participant)
+                      )
+                    );
+                  });
                 }, 
                 child: Center(
                   child:Row(

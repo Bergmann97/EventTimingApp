@@ -2,25 +2,32 @@
 
 import 'package:demo_app/models/participant.dart';
 import 'package:demo_app/controllers/firebase.dart';
+import 'package:demo_app/screens/viewParticipantScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer';
 
-class CreateParticipantPage extends StatefulWidget {
-  const CreateParticipantPage({Key? key}) : super(key: key);
+// ignore: must_be_immutable
+class EditParticipantPage extends StatefulWidget {
+  CreatedParticipant participant;
+
+  EditParticipantPage({Key? key, required this.participant}) : super(key: key);
 
   @override
-  _CreateParticipantPageState createState() => _CreateParticipantPageState();
+  // ignore: no_logic_in_create_state
+  _EditParticipantPageState createState() => _EditParticipantPageState(participant: participant);
 }
 
-class _CreateParticipantPageState extends State<CreateParticipantPage> {
+class _EditParticipantPageState extends State<EditParticipantPage> {
 
   User user = FirebaseAuth.instance.currentUser!;
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
 
   final db = FirebaseFirestore.instance;
+
+  CreatedParticipant participant;
 
   TextEditingController firstNameCtrl = TextEditingController();
   TextEditingController secondNameCtrl = TextEditingController();
@@ -28,7 +35,10 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
   TextEditingController ageCtrl = TextEditingController();
   TextEditingController emailCtrl = TextEditingController();
 
-  bool _buttonDisabled = true;
+  bool _buttonDisabled = false;
+
+  // ignore: unused_element
+  _EditParticipantPageState({Key? key, required this.participant});
 
   List<String> genders = [
     Sex.male.sexToString(),
@@ -51,12 +61,12 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
     }
   }
 
-  createParticipant() async {
+  updateParticipant() async {
     FirebaseHelper fb = FirebaseHelper();
 
     try {
       CreatedParticipant p = CreatedParticipant(
-        "TBD",
+        participant.getUID(),
         -1, 
         getSexFromString(genderItem), 
         firstNameCtrl.text, 
@@ -66,12 +76,24 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
         emailCtrl.text
       );
 
-      log("Help");
-      log(p.toString());
-
-      DocumentReference? res = await fb.addDocument("participants_new", p.toJSON());
-      fb.updateDocument("participants_new", res!, {'uid': res.id, 'cid': user.uid});
-      Navigator.of(context).pop();
+      if (p.getFirstname() != participant.getFirstname() ||
+          p.getSecondname() != participant.getSecondname() ||
+          p.getEmail() != participant.getEmail() ||
+          p.getSex().sexToString() != participant.getSex().sexToString() ||
+          p.getAge() != participant.getAge()) {
+        await fb.updateDocumentById("participants_new", participant.getUID(), p.toJSON());
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => 
+              ViewParticipantPage(participant: p)
+          )
+        );
+      } else {
+        log("Participant did not change");
+        setState(() {
+          Navigator.of(context).pop();
+        });
+      }
     } catch (e) {
       log(e.toString());
     }
@@ -110,7 +132,12 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
   void initState() {
     super.initState();
     formkey = GlobalKey<FormState>();
-    _buttonDisabled = true;
+    _buttonDisabled = false;
+    firstNameCtrl.text = participant.getFirstname();
+    secondNameCtrl.text = participant.getSecondname();
+    ageCtrl.text = participant.getBirthDate();
+    emailCtrl.text = participant.getEmail();
+    genderItem = participant.getSex().sexToString();
   }
 
   @override
@@ -122,6 +149,20 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back, 
+            color: Color.fromARGB(255, 239, 255, 100)
+          ),
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) 
+                  => ViewParticipantPage(participant: participant,)
+              )
+            );
+          },
+        ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -201,7 +242,7 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                 height: MediaQuery.of(context).size.height * 0.03,
               ),
               const Text(
-                "Create Participant",
+                "Edit Participant",
                 style: TextStyle(
                   color: Color.fromARGB(255, 231, 250, 60),
                   fontWeight: FontWeight.bold,
@@ -625,11 +666,11 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
                 child: ElevatedButton(
                   onPressed: _buttonDisabled ? null : () {
                     if (formkey.currentState!.validate()) {
-                      createParticipant();
+                      updateParticipant();
                     }
                   }, 
                   child: const Text(
-                    "Create Participant",
+                    "Confirm Changes",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 17,

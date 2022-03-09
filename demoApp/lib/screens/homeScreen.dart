@@ -12,15 +12,18 @@ import 'dart:developer';
 
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  int screen;
+
+  HomePage({Key? key, required this.screen}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  // ignore: no_logic_in_create_state
+  _HomePageState createState() => _HomePageState(selectedItem: screen);
 }
 
 class _HomePageState extends State<HomePage> {
   User user = FirebaseAuth.instance.currentUser!;
-  int _selectedItem = 0;
+  int selectedItem = 0;
   final db = FirebaseFirestore.instance;
 
   FirebaseHelper fb = FirebaseHelper();
@@ -31,6 +34,9 @@ class _HomePageState extends State<HomePage> {
     const TimerView(),
     const ProfilView(),
   ];
+
+  // ignore: unused_element
+  _HomePageState({Key? key, required this.selectedItem});
 
   Future signoutNew() async {
     await FirebaseAuth.instance.signOut();
@@ -60,6 +66,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: null,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -142,7 +149,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          bodies[_selectedItem],
+          bodies[selectedItem],
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -152,10 +159,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.timer), label: "Timer"),
           BottomNavigationBarItem(icon: Icon(Icons.person_sharp), label: "Profil"),
         ],
-        currentIndex: _selectedItem,
+        currentIndex: selectedItem,
         onTap: (int index) {
           setState(() {
-            _selectedItem = index;
+            selectedItem = index;
           });
         },
         backgroundColor: const Color.fromRGBO(49, 98, 94, 50),

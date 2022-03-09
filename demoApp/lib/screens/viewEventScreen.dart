@@ -3,6 +3,7 @@
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
 import 'package:demo_app/controllers/firebase.dart';
+import 'package:demo_app/screens/editEventScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,12 @@ class _ViewEventPageState extends State<ViewEventPage> {
   FirebaseHelper fb = FirebaseHelper();
   double legendsize = 0.3;
   double legendsize2 = 0.2;
+
+  TextEditingController nameCtrl = TextEditingController();
+  TextEditingController startDateCtrl = TextEditingController();
+  TextEditingController startTimeCtrl = TextEditingController();
+  TextEditingController endDateCtrl = TextEditingController();
+  TextEditingController endTimeCtrl = TextEditingController();
 
   bool _deleted = false;
   String dropdownvalue = "DNS"; 
@@ -184,7 +191,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
     );
   }
 
-
   getAlertDNFParticipantDialog(int i) {
     return showDialog(
       context: context, 
@@ -285,7 +291,15 @@ class _ViewEventPageState extends State<ViewEventPage> {
                       onPressed: () {
                         setState(() {
                           event.getParticipants()[i].setEventState(EventState.values[items.indexOf(dropdownvalue)]);
-                          fb.updateDocumentById("events_new", event.getEid(), event.toJSON());
+                          log(event.toJSON().toString());
+                          FirebaseHelper f = FirebaseHelper();
+                          f.updateDocumentById(
+                            "events_new", 
+                            event.getEid(), 
+                            {
+                              'participants': event.getParticipants().map((e) => e.toJSON()).toList()
+                            }
+                          );
                         });
                         log("State changed!");
                         Navigator.pop(context);
@@ -344,6 +358,12 @@ class _ViewEventPageState extends State<ViewEventPage> {
                   onPressed: () {
                     // TODO: go to edit page -> Create Oage?
                     log("Pressed Participant!");
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) 
+                          => EditEventPage(event: event)
+                      )
+                    );
                   }, 
                   onLongPress: () {
                     setState(() {
@@ -385,8 +405,157 @@ class _ViewEventPageState extends State<ViewEventPage> {
     return children;
   }
 
-  Widget getParticipantView(bool generated) {
-    if (generated) {
+  Widget getParticipantView() {
+    log("Participants Generated: " + event.isGenerated().toString());
+    if (event.isGenerated()) {
+      return Container(
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.37,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: const Color.fromRGBO(232, 255, 24, 100),
+            width: 1,
+          ),
+          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+          color: const Color.fromARGB(156, 54, 107, 103),
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 7,
+              spreadRadius: 5,
+              offset: Offset(0, 5), 
+              color: Color.fromARGB(156, 22, 73, 69)
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.01,
+            ),
+            Text(
+              "Participants (" + event.getMaxNumParticipants().toString() + ")",
+              style: getTextStyle(20),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.01,
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.7,
+              height: MediaQuery.of(context).size.height * 0.23,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: const Color.fromRGBO(232, 255, 24, 100),
+                  width: 1,
+                ),
+                borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                color: const Color.fromARGB(156, 54, 107, 103),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 7,
+                    spreadRadius: 5,
+                    offset: Offset(0, 5), 
+                    color: Color.fromARGB(156, 22, 73, 69)
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.01,
+                    ),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 3,
+                      runSpacing: 3,
+                      children: createParticipantDots()
+                    ),
+                  ]
+                ),
+              ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.02,
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.7,
+              child: Wrap(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * legendsize2,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.circle,
+                          color: Colors.grey,
+                          size: 15,
+                        ),
+                        Text(
+                          "  DNS  ",
+                          style: getTextStyle(15),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * legendsize,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: Colors.blue[400],
+                          size: 15,
+                        ),
+                        Text(
+                          "  running  ",
+                          style: getTextStyle(15),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * legendsize2,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: Colors.red[700],
+                          size: 15,
+                        ),
+                        Text(
+                          "  DNF",
+                          style: getTextStyle(15),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * legendsize,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.circle,
+                          color: Color.fromARGB(255, 231, 250, 60),
+                          size: 15,
+                        ),
+                        Text(
+                          "  finished  ",
+                          style: getTextStyle(15),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.02,
+            ),
+          ],
+        ),
+      );
+
+
       return Container(
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.37,
@@ -534,13 +703,22 @@ class _ViewEventPageState extends State<ViewEventPage> {
         ),
       );
     } else {
-      return const Text("create some");
+      return Text(
+        event.getParticipants().toString()
+      );
     }
   }
 
 
   @override
   void initState() {
+    setState(() {
+      nameCtrl.text = event.getName();
+      startDateCtrl.text = event.getStartdate().getDate();
+      startTimeCtrl.text = event.getStartdate().getTime();
+      endDateCtrl.text = event.getEnddate().getDate();
+      endTimeCtrl.text = event.getEnddate().getTime();
+    });
     super.initState();
   }
 
@@ -593,6 +771,15 @@ class _ViewEventPageState extends State<ViewEventPage> {
             )
           )
         ],
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back, 
+            color: Color.fromARGB(255, 239, 255, 100)
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
       ),
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
@@ -694,7 +881,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                     child: SizedBox(
                       width: MediaQuery.of(context).size.width * 0.7,
                       child: Text(
-                        event.getName(),
+                        nameCtrl.text,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -749,11 +936,11 @@ class _ViewEventPageState extends State<ViewEventPage> {
                                 height: MediaQuery.of(context).size.height * 0.01,
                               ),
                               Text(
-                                event.getStartdate().getDate(),
+                                startDateCtrl.text,
                                 style: getTextStyle(17),
                               ),
                               Text(
-                                event.getStartdate().getTime(),
+                                startTimeCtrl.text,
                                 style: getTextStyle(20),
                               ),
                             ],
@@ -793,11 +980,11 @@ class _ViewEventPageState extends State<ViewEventPage> {
                                 height: MediaQuery.of(context).size.height * 0.01,
                               ),
                               Text(
-                                event.getEnddate().getDate(),
+                                endDateCtrl.text,
                                 style: getTextStyle(17),
                               ),
                               Text(
-                                event.getEnddate().getTime(),
+                                endTimeCtrl.text,
                                 style: getTextStyle(20),
                               ),
                             ],
@@ -809,7 +996,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                   SizedBox(
                     height: MediaQuery.of(context).size.height * 0.03,
                   ),
-                  getParticipantView(event.isGenerated()),
+                  getParticipantView(),
                 ],
               ),
             ),
@@ -820,9 +1007,28 @@ class _ViewEventPageState extends State<ViewEventPage> {
                 width: MediaQuery.of(context).size.width * 0.5,
                 height: MediaQuery.of(context).size.height * 0.05,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: go to edit page -> Create Oage?
+                  onPressed: () async {
                     log("Edit Event");
+
+                    Navigator.pushReplacement(
+                      context, 
+                      MaterialPageRoute(
+                        builder: (context) 
+                          => EditEventPage(event: event)
+                      )
+                    );
+
+                    // event = await Navigator.push(
+                    //   context, 
+                    //   MaterialPageRoute(
+                    //     builder: (context) 
+                    //       => EditEventPage(event: event)
+                    //   )
+                    // );
+                    // setState(() {
+                    //   log("update generated and reload;");
+                    //   generated = event.isGenerated();
+                    // });
                   }, 
                   child: Center(
                     child:Row(
@@ -865,7 +1071,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: event.isGenerated() ? null : FloatingActionButton(
         onPressed: () {
           // TODO: is  this needed?
           log("Add Participant!");

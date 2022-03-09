@@ -80,6 +80,7 @@ class _EventViewState extends State<EventView> {
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.04,
         ),
+        // TODO: View when no event exists
         StreamBuilder<QuerySnapshot>(
             stream: db.collection("events_new").snapshots(),
             builder: (context, snapshot) {
@@ -134,7 +135,7 @@ class _EventViewState extends State<EventView> {
                                   for (dynamic p in event["participants"]) {
                                     participants.add(GeneratedParticipant(
                                       p['number'],
-                                      EventState.values[p['eventState']]
+                                      EventState.values[p['state']]
                                     ));
                                   }
                                 }
@@ -155,7 +156,7 @@ class _EventViewState extends State<EventView> {
                                   event['generatedParticipants'], 
                                 );
                                 log(eventT.toString());
-                                Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT)));
+                                Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT,)));
                               },
                               style: ButtonStyle(
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(

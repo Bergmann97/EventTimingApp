@@ -46,6 +46,16 @@ class FirebaseHelper {
     }
   }
 
+  Future<Map<String, dynamic>?> readDocumentById(String collection, String docRef) async {
+    try {
+      var doc = await db.collection(collection).doc(docRef).get();
+      return doc.data();
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
+
   deleteDocument(String collection, DocumentReference docRef) async {
     try {
       db.collection(collection).doc(docRef.id).delete();
