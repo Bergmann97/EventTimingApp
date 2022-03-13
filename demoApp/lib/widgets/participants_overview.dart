@@ -51,15 +51,13 @@ class _ParticipantViewState extends State<ParticipantView> {
     }
   }
 
-  CreatedParticipant getParticipantFromSnapshot(participant) {
-    return CreatedParticipant(
+  Participant getParticipantFromSnapshot(participant) {
+    return Participant(
       participant['uid'],
-      participant['number'], 
       stringToSex(participant['sex']), 
       participant['firstname'], 
       participant['secondname'], 
       participant["birthdate"], 
-      stringToState(participant['state']), 
       participant['email'], 
     );
   }
@@ -80,7 +78,7 @@ class _ParticipantViewState extends State<ParticipantView> {
   }
 
   getFormatedParticipant(participant) {
-    CreatedParticipant p = getParticipantFromSnapshot(participant);
+    Participant p = getParticipantFromSnapshot(participant);
 
     return p.getFirstname() + " " + p.getSecondname() + 
             " (" + getSexAsLetter(p.getSex()) + "/" 
@@ -190,7 +188,7 @@ class _ParticipantViewState extends State<ParticipantView> {
                             height: MediaQuery.of(context).size.height*0.05,
                             child: ElevatedButton(
                               onPressed: () {
-                                CreatedParticipant p = getParticipantFromSnapshot(participant);
+                                Participant p = getParticipantFromSnapshot(participant);
                                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewParticipantPage(participant: p)));
                               },
                               style: ButtonStyle(

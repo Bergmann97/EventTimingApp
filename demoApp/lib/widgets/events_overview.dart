@@ -1,6 +1,5 @@
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:demo_app/models/event.dart';
-import 'package:demo_app/models/participant.dart';
 import 'package:demo_app/screens/createEventScreen.dart';
 import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -126,19 +125,6 @@ class _EventViewState extends State<EventView> {
                             height: MediaQuery.of(context).size.height*0.1,
                             child: ElevatedButton(
                               onPressed: () {
-                                List<dynamic> participants = [];
-                                if (!event['generatedParticipants']) {
-                                  for (dynamic p in event["participants"]) {
-                                    participants.add(p);
-                                  }
-                                } else {
-                                  for (dynamic p in event["participants"]) {
-                                    participants.add(GeneratedParticipant(
-                                      p['number'],
-                                      EventState.values[p['state']]
-                                    ));
-                                  }
-                                }
                                 Event eventT = Event(
                                   event['eid'],
                                   user.uid,
@@ -152,7 +138,7 @@ class _EventViewState extends State<EventView> {
                                     event['enddate']["time"],
                                   ),
                                   event['maxNumParticipants'], 
-                                  participants,
+                                  event['participants'],
                                   event['generatedParticipants'], 
                                 );
                                 log(eventT.toString());

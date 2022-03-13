@@ -11,7 +11,7 @@ import 'dart:developer';
 
 // ignore: must_be_immutable
 class EditParticipantPage extends StatefulWidget {
-  CreatedParticipant participant;
+  Participant participant;
 
   EditParticipantPage({Key? key, required this.participant}) : super(key: key);
 
@@ -27,7 +27,7 @@ class _EditParticipantPageState extends State<EditParticipantPage> {
 
   final db = FirebaseFirestore.instance;
 
-  CreatedParticipant participant;
+  Participant participant;
 
   TextEditingController firstNameCtrl = TextEditingController();
   TextEditingController secondNameCtrl = TextEditingController();
@@ -65,14 +65,12 @@ class _EditParticipantPageState extends State<EditParticipantPage> {
     FirebaseHelper fb = FirebaseHelper();
 
     try {
-      CreatedParticipant p = CreatedParticipant(
+      Participant p = Participant(
         participant.getUID(),
-        -1, 
         getSexFromString(genderItem), 
         firstNameCtrl.text, 
         secondNameCtrl.text, 
         ageCtrl.text, 
-        EventState.dns, 
         emailCtrl.text
       );
 

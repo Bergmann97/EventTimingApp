@@ -2,7 +2,6 @@
 
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/controllers/firebase.dart';
-import 'package:demo_app/models/participant.dart';
 import 'package:demo_app/screens/viewEventScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -63,7 +62,6 @@ class _EditEventPageState extends State<EditEventPage> {
   }
 
   void updateEvent() async {
-    // TODO: Wirft Fehler!
     bool _changed = false;
 
     // changing the standard values
@@ -148,12 +146,14 @@ class _EditEventPageState extends State<EditEventPage> {
         // adding more generated participants
         if (!_manualParticipants && event.getMaxNumParticipants() < int.parse(numParticipantsCtrl.text)) {
           log("increasing generated Participants");
-          List newParticipants = event.getParticipants().map((e) => e.toJSON()).toList();
+          List newParticipants = event.getParticipants();
           for (int i = event.getMaxNumParticipants()-1; i < int.parse(numParticipantsCtrl.text); i++) {
             newParticipants.add(
               {
                 'number': i+1,
                 'state': 0,
+                'time': "00:00:00",
+                'place': "DNS"
               }
             );
           }
@@ -180,18 +180,17 @@ class _EditEventPageState extends State<EditEventPage> {
             log("decreasing any kind of Participants");
             List newParticipants = [];
             List old = event.getParticipants();
+
+            log(old.toString());
+
             int counter = 0;
             for (var item in old) {
               newParticipants.add(item);
               counter++;
               if (counter >= event.getMaxNumParticipants()) {break;}
+              if (counter >= int.parse(numParticipantsCtrl.text)) {break;}
             }
 
-            // for (int i = 0; i < event.getMaxNumParticipants() || i >= old.length; i++) {
-            //   newParticipants.add(
-            //     old[i]
-            //   );
-            // }
             try {
               // set the flag, add the generated participants and set maxNumPart
               await fb.updateDocumentById(
@@ -271,119 +270,12 @@ class _EditEventPageState extends State<EditEventPage> {
     if (_changed) {
       log("Event needs to be updated");
       Navigator.pop(context, nEvent);
-      // Navigator.pushReplacement(
-      //   context, 
-      //   MaterialPageRoute(
-      //     builder: (context) => 
-      //     ViewEventPage(event: nEvent,)
-      //   )
-      // );
-      // Navigator.of(context).pushReplacement(
-      //   MaterialPageRoute(
-      //     builder: (context) => ViewEventPage(event: nEvent, generated: !_manualParticipants,)
-      //   )
-      // );
     } else {
       log("Event did not change");
       setState(() {
         Navigator.of(context).pop();
       });
     }
-    
-        // if (e.getName() != event.getName() ||
-    //     e.getStartdate().getDate() != event.getStartdate().getDate() ||
-    //     e.getStartdate().getTime() != event.getStartdate().getTime() ||
-    //     e.getEnddate().getDate() != event.getEnddate().getDate() ||
-    //     e.getEnddate().getTime() != event.getEnddate().getTime() ||
-    //     e.isGenerated() != event.isGenerated()) {
-
-    //   List newParticipants = [];
-    //   if (event.isGenerated() && !e.isGenerated()) {
-    //     newParticipants = [];
-    //   } else {
-    //     if (!event.isGenerated() && e.isGenerated()) {
-    //       if (e.getMaxNumParticipants() != event.getMaxNumParticipants()) {
-    //         newParticipants = [];
-    //         for (int i = event.getMaxNumParticipants(); i < int.parse(numParticipantsCtrl.text); i++) {
-    //           newParticipants.add(
-    //             GeneratedParticipant(
-    //               i,
-    //               EventState.values[0]
-    //             )
-    //           );
-    //         }
-    //       } else {
-    //         newParticipants = [];
-    //         for (int i = 0; i < event.getMaxNumParticipants(); i++) {
-    //           newParticipants.add(
-    //             GeneratedParticipant(
-    //               i,
-    //               EventState.values[0]
-    //             )
-    //           );
-    //         }
-    //       }
-    //     } else {
-    //       if (e.isGenerated() && e.getMaxNumParticipants() > event.getMaxNumParticipants()) {
-    //         newParticipants = event.getParticipants();
-    //         for (int i = event.getMaxNumParticipants(); i < int.parse(numParticipantsCtrl.text); i++) {
-    //           newParticipants.add(
-    //             GeneratedParticipant(
-    //               i,
-    //               EventState.values[0]
-    //             )
-    //           );
-    //         }
-    //       } else {
-    //         if (e.isGenerated() && e.getMaxNumParticipants() < event.getMaxNumParticipants()) {
-    //           for (int i = 0; i < e.getMaxNumParticipants(); i++) {
-    //             newParticipants.add(event.getParticipants()[i]);
-    //           }
-    //         } else {
-    //           newParticipants = event.getParticipants();
-    //         }
-    //       } 
-    //     }
-    //   }
-
-    //   if (newParticipants != e.getParticipants()) {
-    //     e.setParticipants(newParticipants);
-    //     log("Change");
-    //     // log(newParticipants.toString());
-    //   }
-
-
-    //   try{
-    //     log(event.toString());
-
-    //     Map<String, dynamic> changes = {
-    //       'eid': event.getEid(),
-    //       'uid': e.getUid(),
-    //       'name': e.getName(),
-    //       'startdate': e.getStartdate().toJSON(),
-    //       'enddate': e.getEnddate().toJSON(),
-    //       'maxNumParticipants': e.getMaxNumParticipants(),
-    //       'participants': newParticipants.map((e) => e.toJSON()).toList(),
-    //       'generatedParticipants': e.isGenerated(),
-    //     };
-
-    //     // log(newParticipants.map((e) => e.toJSON()).toList().toString());
-    //     log(changes.toString());
-
-    //     await fb.updateDocumentById("events_new", event.getEid(), changes);
-    //     log("Event updated!");
-    //     Navigator.of(context).pushReplacement(
-    //       MaterialPageRoute(
-    //         builder: (context) => 
-    //           ViewEventPage(event: e,)
-    //       )
-    //     );
-    //   } catch(e) {
-    //     log(e.toString());
-    //   }
-    // } else {
-    //   log("No Changes");
-    // }
   }
 
 
@@ -489,9 +381,12 @@ class _EditEventPageState extends State<EditEventPage> {
             color: Color.fromARGB(255, 239, 255, 100)
           ),
           onPressed: () {
-            Navigator.pop(
+            Navigator.pushReplacement(
               context, 
-              event,
+              MaterialPageRoute(
+                builder: (context) => 
+                  ViewEventPage(event: event)
+              )
             );
           },
         ),

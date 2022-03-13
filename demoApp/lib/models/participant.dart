@@ -1,3 +1,4 @@
+
 enum EventState {
   dns,
   dnf,
@@ -45,72 +46,8 @@ extension ParseToString2 on Sex {
   }
 }
 
-class Participant {
-  late int? _number;
-  late EventState? _state;
 
-  int getState() {
-    if (_state != null) {
-      return _state!.index;
-    } else {
-      return 0;
-    }
-  }
-
-  setEventState(EventState state) {
-    _state = state;
-  }
-
-  toJSON() {
-    return {
-      'startnumber': _number,
-      'state': _state!.index,
-    };
-  }
-}
-
-class GeneratedParticipant extends Participant {
-  GeneratedParticipant(int number, EventState state) {
-    _number = number;
-    _state = state;
-  }
-
-  @override
-  setEventState(EventState state) {
-    _state = state;
-  }
-
-  @override
-  int getState() {
-    if (_state != null) {
-      return _state!.index;
-    } else {
-      return 0;
-    }
-  }
-
-  @override
-  Map toJSON() {
-    return {
-      'number': _number,
-      'state': _state!.index,
-    };
-  }
-
-  @override
-  String toString() {
-    return _number.toString() + ": " + _state.toString();
-  }
-
-  GeneratedParticipant fromSnapshot(Map snapshot) {
-    return GeneratedParticipant(
-      snapshot["startnumber"], 
-      snapshot["state"], 
-    );
-  }
-}
-
-class CreatedParticipant extends Participant{
+class Participant{
   late String _uid;
   late String _firstName;
   late String _secondName;
@@ -120,23 +57,19 @@ class CreatedParticipant extends Participant{
   final String _place = "DNS";
   String _email = "";
 
-  CreatedParticipant(
+  Participant(
     String uid, 
-    int number,
     Sex sex,
     String firstName,
     String secondName,
     String birthdate,
-    EventState state,
     String? email,
   ) {
     _uid = uid;
-    _number = number;
     _sex = sex;
     _birthdate = birthdate;
     _firstName = firstName;
     _secondName = secondName;
-    _state = state;
     if (email != null) {
       _email = email;
     }
@@ -164,17 +97,14 @@ class CreatedParticipant extends Participant{
     }
   }
 
-  @override
   toJSON() {
     return {
       'firstname': _firstName,
       'secondname': _secondName,
-      'number': _number,
       'sex': _sex.sexToString(),
       'birthdate': _birthdate,
       'time': _time,
       'place': _place,
-      'state': _state!.stateToString(),
       'email': _email
     };
   }

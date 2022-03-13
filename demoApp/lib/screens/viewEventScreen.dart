@@ -37,7 +37,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
   bool _deleted = false;
   String dropdownvalue = "DNS"; 
 
-  var items = [    
+  List<String> items = [    
     EventState.dns.stateToString(),
     EventState.dnf.stateToString(),
     EventState.running.stateToString(),
@@ -191,7 +191,8 @@ class _ViewEventPageState extends State<ViewEventPage> {
     );
   }
 
-  getAlertDNFParticipantDialog(int i) {
+  getAlertDNFParticipantDialog(Map participant) {
+    log(participant.toString());
     return showDialog(
       context: context, 
       barrierDismissible: false,
@@ -290,18 +291,22 @@ class _ViewEventPageState extends State<ViewEventPage> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          event.getParticipants()[i].setEventState(EventState.values[items.indexOf(dropdownvalue)]);
-                          log(event.toJSON().toString());
+                          log("1");
+                          event.getParticipants()[participant['number']-1]["state"] = EventState.values[items.indexOf(dropdownvalue)].index;
+                          log("2");
+                          participant['state'] = EventState.values[items.indexOf(dropdownvalue)].index;
+                          log("3");
+                          log(event.getParticipants().toString());
+                          // log(event.toJSON().toString());
                           FirebaseHelper f = FirebaseHelper();
                           f.updateDocumentById(
                             "events_new", 
                             event.getEid(), 
-                            {
-                              'participants': event.getParticipants().map((e) => e.toJSON()).toList()
-                            }
+                            {'participants': event.getParticipants()}
                           );
                         });
                         log("State changed!");
+                        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ViewEventPage(event: event,)));
                         Navigator.pop(context);
                       }, 
                       style: ButtonStyle(
@@ -348,7 +353,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
   createParticipantDots() {
     List<Widget> children = [];
     if (event.getMaxNumParticipants() > 0) {
-      for (int i = 0; i < event.getMaxNumParticipants(); i++) {
+      for (Map participant in event.getParticipants()) {
         children.add(
           Container(
             width: MediaQuery.of(context).size.width * 0.09,
@@ -356,29 +361,22 @@ class _ViewEventPageState extends State<ViewEventPage> {
             alignment: Alignment.center,
             child: TextButton(
                   onPressed: () {
-                    // TODO: go to edit page -> Create Oage?
                     log("Pressed Participant!");
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) 
-                          => EditEventPage(event: event)
-                      )
-                    );
                   }, 
                   onLongPress: () {
                     setState(() {
-                      dropdownvalue = EventState.values[event.getParticipants()[i].getState()].stateToString();
-                      if (event.getParticipants()[i].getState() != EventState.dnf.index) {
-                        getAlertDNFParticipantDialog(i);
-                      }
+                      // log(participant["number"].toString());
+                      dropdownvalue = EventState.values[event.getParticipants()[participant["number"]]["state"]].stateToString();
+                      // log(dropdownvalue.toString());
+                      getAlertDNFParticipantDialog(participant);
                     });
                   },
                   child: Center(
                     child:Text(
-                      (i+1).toString(),
+                      participant["number"].toString(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: (i+1) < 10 ? 14 : ((i+1) < 100 ? 13 : 9),
+                        fontSize: participant["number"] < 10 ? 14 : (participant["number"] < 100 ? 13 : 9),
                         color: const Color.fromARGB(156, 9, 31, 29)
                       ),
                     ),
@@ -394,7 +392,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                       ),
                     ),
                     backgroundColor: MaterialStateProperty.all<Color>(
-                      stateColors[event.getParticipants()[i].getState()]
+                      stateColors[participant["state"]]
                     ),
                   ),
                 ),
@@ -404,6 +402,156 @@ class _ViewEventPageState extends State<ViewEventPage> {
     }
     return children;
   }
+
+  checkParticipantInEvent(Map<String, dynamic> data) {
+    for (var p in event.getParticipants()) {
+      // log(p.toString());
+      if (p['uid'] == data['uid']) {
+        return {
+          'found': true, 
+          'participant': p
+        };
+      }
+    }
+    return {
+      'found': false, 
+      'participant': null
+    };
+  }
+
+  getSexAsLetter(String sex) {
+    switch (sex) {
+      case 'male': return "M";
+      case 'female': return "F";
+      case 'diverse': return "D";
+      default: return "...";
+    }
+  }
+
+  Sex stringToSex(String sex) {
+    switch (sex) {
+      case "male": return Sex.male;
+      case "female": return Sex.female;
+      case "diverse": return Sex.diverse;
+      default: return Sex.none;
+    }
+  }
+
+  int getAge(Map p){
+    var now = DateTime.now();
+    var birth = DateTime(
+      int.parse(p['birthdate'].split(".")[2]),
+      int.parse(p['birthdate'].split(".")[1]),
+      int.parse(p['birthdate'].split(".")[0]),
+    );
+
+    if ((now.month < birth.month) || (now.month == birth.month && now.day < birth.day)) {
+      return now.year-birth.year-1;
+    } else {
+      return now.year-birth.year;
+    }
+  }
+
+  getFormatedParticipant(Map p) {
+    return p['firstname'] + " " + p['secondname'];
+    // return p['firstname'] + " " + p['secondname'] + 
+    //       " (" + getSexAsLetter(p['sex']) + "/" 
+    //       + getAge(p).toString() + ")";
+  }
+
+  createParticipantsList() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: StreamBuilder<QuerySnapshot>(
+        stream: db.collection("participants_new").snapshots(),
+          builder: (context, snapshot) {
+            List<Widget> children = [];
+            if (snapshot.hasData) {
+              for (DocumentSnapshot data in snapshot.data!.docs) {
+                Map result = checkParticipantInEvent(data.data() as Map<String,dynamic>);
+                if (result['found']) {
+                  children.add(
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.65,
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              side: const BorderSide(
+                                color: Color.fromARGB(255, 212, 233, 20),
+                                width: 2
+                              ),
+                            ),
+                          ),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                            const Color.fromRGBO(49, 98, 94, 50),
+                          ),
+                        ),
+                        onPressed: () {
+                          log((data.data()! as Map)['firstname']);
+                        }, 
+                        onLongPress: () {
+                          setState(() {
+                            log(result['participant']["number"].toString());
+                            dropdownvalue = EventState.values[event.getParticipants()[result['participant']["number"]-1]["state"]].stateToString();
+                            log(dropdownvalue.toString());
+                            getAlertDNFParticipantDialog(result['participant']);
+                          });
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: MediaQuery.of(context).size.height * 0.03,
+                              width: MediaQuery.of(context).size.height * 0.03,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: stateColors[result['participant']["state"]],
+                                border: Border.all(
+                                  color: const Color.fromARGB(156, 32, 68, 65),
+                                  width: 2,
+                                )
+                              ),
+                              child: Text(
+                                result['participant']['number'].toString(),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: result['participant']['number'] < 10 ? 14 : (result['participant']['number'] < 100 ? 13 : 9),
+                                  color: const Color.fromARGB(156, 9, 31, 29),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.03,
+                            ),
+                            Flexible(
+                              child: Text(
+                                getFormatedParticipant(data.data() as Map),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),                            
+                          ],
+                        )
+                      ),
+                    )
+                  );
+                }
+              }
+            }
+
+            return Wrap(
+              // spacing: 8.0,
+              // runSpacing: 8.0,
+              alignment: WrapAlignment.center,
+              children: children,
+            );
+          }
+      ),
+    );
+  }
+
 
   Widget getParticipantView() {
     log("Participants Generated: " + event.isGenerated().toString());
@@ -554,8 +702,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
           ],
         ),
       );
-
-
+    } else {
       return Container(
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.37,
@@ -612,11 +759,9 @@ class _ViewEventPageState extends State<ViewEventPage> {
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.01,
                     ),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 3,
-                      runSpacing: 3,
-                      children: createParticipantDots()
+                    createParticipantsList(),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.01,
                     ),
                   ]
                 ),
@@ -701,10 +846,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
             ),
           ],
         ),
-      );
-    } else {
-      return Text(
-        event.getParticipants().toString()
       );
     }
   }
@@ -1017,18 +1158,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
                           => EditEventPage(event: event)
                       )
                     );
-
-                    // event = await Navigator.push(
-                    //   context, 
-                    //   MaterialPageRoute(
-                    //     builder: (context) 
-                    //       => EditEventPage(event: event)
-                    //   )
-                    // );
-                    // setState(() {
-                    //   log("update generated and reload;");
-                    //   generated = event.isGenerated();
-                    // });
                   }, 
                   child: Center(
                     child:Row(
@@ -1073,7 +1202,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
       ),
       floatingActionButton: event.isGenerated() ? null : FloatingActionButton(
         onPressed: () {
-          // TODO: is  this needed?
+          // TODO: show list with all known and not added participants to add one or more 
           log("Add Participant!");
         },
         child: const Icon(

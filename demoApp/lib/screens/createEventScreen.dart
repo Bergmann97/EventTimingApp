@@ -62,10 +62,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
     if (!_onlyStartnumbers) {
       for (int i = 0; i < int.parse(numParticipantsCtrl.text); i++) {
         participants.add(
-          GeneratedParticipant(
-            i,
-            EventState.values[0]
-          ).toJSON()
+          {
+            "number": i,
+            "place": "DNS",
+            "state": EventState.dns.index,
+            "time": "00:00:00"
+          }
         );
       }
     }

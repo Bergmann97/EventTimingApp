@@ -55,14 +55,12 @@ class _CreateParticipantPageState extends State<CreateParticipantPage> {
     FirebaseHelper fb = FirebaseHelper();
 
     try {
-      CreatedParticipant p = CreatedParticipant(
+      Participant p = Participant(
         "TBD",
-        -1, 
         getSexFromString(genderItem), 
         firstNameCtrl.text, 
         secondNameCtrl.text, 
         ageCtrl.text, 
-        EventState.dns, 
         emailCtrl.text
       );
 

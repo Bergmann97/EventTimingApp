@@ -12,7 +12,7 @@ import 'dart:developer';
 
 // ignore: must_be_immutable
 class ViewParticipantPage extends StatefulWidget {
-  CreatedParticipant participant;
+  Participant participant;
 
   ViewParticipantPage({Key? key, required this.participant}) : super(key: key);
 
@@ -22,7 +22,7 @@ class ViewParticipantPage extends StatefulWidget {
 }
 
 class _ViewParticipantPageState extends State<ViewParticipantPage> {
-  CreatedParticipant participant;
+  Participant participant;
   User user = FirebaseAuth.instance.currentUser!;
   final db = FirebaseFirestore.instance;
   FirebaseHelper fb = FirebaseHelper();
@@ -87,15 +87,13 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
     }
   }
 
-  Future<CreatedParticipant> getParticipantFromSnapshot(participant) async {
-    return CreatedParticipant(
+  Future<Participant> getParticipantFromSnapshot(participant) async {
+    return Participant(
       participant['uid'],
-      participant['number'], 
       stringToSex(participant['sex']), 
       participant['firstname'], 
       participant['secondname'], 
       participant["birthdate"], 
-      stringToState(participant['state']), 
       participant['email'], 
     );
   }
