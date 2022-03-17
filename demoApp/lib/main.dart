@@ -23,9 +23,6 @@ class MyApp extends StatelessWidget {
       title: 'EventTimerApp Demo',
       theme: ThemeData(
         primarySwatch: Colors.green,
-        // primarySwatch: MaterialStateProperty.all<Color>(
-        //           Color.fromRGBO(49, 98, 94, 50),
-        //         ), Ma
         canvasColor: const Color.fromARGB(156, 32, 68, 65),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
@@ -36,6 +33,13 @@ class MyApp extends StatelessWidget {
       ),
       home: const MainPage(),
       debugShowCheckedModeBanner: false,
+      initialRoute: "/",
+      routes: {
+        // '/': (context) => HomePage(screen: 0),
+        '/participants': (context) => HomePage(screen: 1),
+        '/timer': (context) => HomePage(screen: 2),
+        '/profile': (context) => HomePage(screen: 3),
+      },
     );
   }
 }

@@ -56,6 +56,35 @@ class FirebaseHelper {
     }
   }
 
+  deleteEventDocsWithParticipant(String pid) async {
+    try {
+      QuerySnapshot querySnapshot = await db.collection("events_new").get();
+      for (var snapshot in querySnapshot.docs) {
+        log((snapshot.data() as Map)['name'].toString());
+        Map event = (snapshot.data() as Map);
+        List parts = event['participants'];
+        for (Map p in parts) {
+          if (p['uid'] == pid) {
+            log(parts.toString());
+            parts.removeWhere((element) => element['uid'] == pid);
+            await updateDocumentById(
+              "events_new", 
+              event['eid'], 
+              {
+                'participants': parts,
+              }
+            );
+            log(parts.toString());
+            return true;
+          }
+        } 
+      }
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
+
   deleteDocument(String collection, DocumentReference docRef) async {
     try {
       db.collection(collection).doc(docRef.id).delete();

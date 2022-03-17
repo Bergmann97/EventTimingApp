@@ -2,7 +2,7 @@
 
 import 'package:demo_app/models/participant.dart';
 import 'package:demo_app/controllers/firebase.dart';
-import 'package:demo_app/screens/viewParticipantScreen.dart';
+import 'package:demo_app/screens/participants/viewParticipantScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';

@@ -2,8 +2,8 @@
 
 import 'package:demo_app/models/event.dart';
 import 'package:demo_app/models/participant.dart';
-import 'package:demo_app/screens/editParticipantScreen.dart';
-import 'package:demo_app/screens/viewEventScreen.dart';
+import 'package:demo_app/screens/events/viewEventScreen.dart';
+import 'package:demo_app/screens/participants/editParticipantScreen.dart';
 import 'package:demo_app/controllers/firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -180,7 +180,9 @@ class _ViewParticipantPageState extends State<ViewParticipantPage> {
                         TextButton(
                           onPressed: () {
                             try {
+                              // TODO: check for appearence of participant in events participants list and remove it
                               fb.deleteDocumentById("participants_new", participant.getUID());
+                              fb.deleteEventDocsWithParticipant(participant.getUID());
                               log("Deleted Event!");
                               deleteState(() {
                                 _deleted = true;

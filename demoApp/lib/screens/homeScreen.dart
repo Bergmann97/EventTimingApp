@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
           Center(
             child: Container(
               width: MediaQuery.of(context).size.width*0.7,
-              height: MediaQuery.of(context).size.width*0.1,
+              height: MediaQuery.of(context).size.height*0.05,
               decoration: BoxDecoration(
                 border: Border.all(
                   color: const Color.fromRGBO(49, 98, 94, 100),
@@ -139,7 +139,7 @@ class _HomePageState extends State<HomePage> {
                       }
                     }
                     return Text(
-                      "Welcom " + name,
+                      "Welcome " + name,
                       style: const TextStyle(
                         color: Color.fromRGBO(49, 98, 94, 50),
                         fontWeight: FontWeight.bold,
@@ -164,6 +164,8 @@ class _HomePageState extends State<HomePage> {
         onTap: (int index) {
           setState(() {
             selectedItem = index;
+            // TODO: something like that
+            // bodies[selectedItem].stopTimer();
           });
         },
         backgroundColor: const Color.fromRGBO(49, 98, 94, 50),
