@@ -26,7 +26,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
   User user = FirebaseAuth.instance.currentUser!;
   final db = FirebaseFirestore.instance;
   FirebaseHelper fb = FirebaseHelper();
-  double legendsize = 0.3;
+  double legendsize = 0.2;
   double legendsize2 = 0.2;
 
   TextEditingController nameCtrl = TextEditingController();
@@ -38,32 +38,43 @@ class _ViewEventPageState extends State<ViewEventPage> {
   bool _deleted = false;
   bool _marked = false;
   List<String> markedUsers = [];
-  String dropdownvalue = "DNS"; 
+  String dropdownvalue = "RUNNING"; 
 
   List<String> items = [    
+    EventState.none.stateToString(),
     EventState.dns.stateToString(),
-    EventState.dnf.stateToString(),
+    // EventState.dnf.stateToString(),
     EventState.running.stateToString(),
     EventState.finished.stateToString(),
   ];
 
+  List<String> startedItems = [
+    EventState.dnf.stateToString(),
+    EventState.running.stateToString(),
+  ];
+
   List<Color> stateColors = [
-    Colors.grey, 
+    Colors.grey,
+    const Color.fromARGB(255, 255, 208, 0),
     const Color.fromRGBO(211, 47, 47, 1),
     const Color.fromRGBO(66, 165, 245, 1),
-    const Color.fromARGB(255, 231, 250, 60)
+    const Color.fromARGB(255, 231, 250, 60),
   ];
+
+  // TODO: Anzeige der States unter participants responsive bekommen
 
   int eventStateFromString(String name) {
     switch(name) {
       case "DNS":
-        return 0;
-      case "DNF":
         return 1;
-      case "RUNNING":
+      case "DNF":
         return 2;
-      case "FINISHED":
+      case "RUNNING":
         return 3;
+      case "FINISHED":
+        return 4;
+      case "NONE":
+        return 0;
       default: 
         return -1; 
     }
@@ -313,7 +324,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
   }
 
   getAlertDNFParticipantDialog(Map participant) {
-    log(participant.toString());
     return showDialog(
       context: context, 
       barrierDismissible: false,
@@ -344,122 +354,193 @@ class _ViewEventPageState extends State<ViewEventPage> {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.01,
                 ),
-                const Text(
-                  "To what state do you want to set the person?",
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 231, 250, 60),
-                    fontWeight: FontWeight.bold
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: MediaQuery.of(context).size.height * 0.05,
+                  child: const Text(
+                    "To what state do you want to set the person?",
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 231, 250, 60),
+                      fontWeight: FontWeight.bold
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.01,
                 ),
-                StatefulBuilder(
-                  builder: (BuildContext context, StateSetter dropDownState) {
-                    return DropdownButton<String>(
-                      value: dropdownvalue,
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Color.fromARGB(255, 231, 250, 60),
-                      ),
-                      dropdownColor: const Color.fromARGB(255, 32, 63, 60),
-                      borderRadius: BorderRadius.circular(15.0),
-                      items: items.map((String item) {
-                        return DropdownMenuItem(
-                          value: item,
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                color: stateColors[eventStateFromString(item)],
-                                size: 15,
-                              ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.03
-                              ),
-                              Text(
-                                item,
-                                style: TextStyle(
-                                  color: const Color.fromARGB(255, 231, 250, 60),
-                                  fontWeight: item == dropdownvalue ? FontWeight.bold : FontWeight.normal
-                                ),
-                              ),
-                            ],
+                event.isStarted() && participant["state"] == EventState.running.index ?
+                  StatefulBuilder(
+                    builder: (BuildContext context, StateSetter dropDownState) {
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.06,
+                        child: DropdownButton<String>(
+                          value: dropdownvalue,
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Color.fromARGB(255, 231, 250, 60),
                           ),
-                          onTap: () {
+                          dropdownColor: const Color.fromARGB(255, 32, 63, 60),
+                          borderRadius: BorderRadius.circular(15.0),
+                          items: startedItems.map((String item) {
+                            return DropdownMenuItem(
+                              value: item,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.circle,
+                                    color: stateColors[eventStateFromString(item)],
+                                    size: 15,
+                                  ),
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.03
+                                  ),
+                                  Text(
+                                    item,
+                                    style: TextStyle(
+                                      color: const Color.fromARGB(255, 231, 250, 60),
+                                      fontWeight: item == dropdownvalue ? FontWeight.bold : FontWeight.normal
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                dropDownState(() {
+                                  dropdownvalue = item;
+                                });
+                              },
+                            );
+                          }).toList(),
+                          
+                          onChanged: (String? newValue) { 
                             dropDownState(() {
-                              dropdownvalue = item;
+                              dropdownvalue = newValue!;
                             });
                           },
-                        );
-                      }).toList(),
-                      
-                      onChanged: (String? newValue) { 
-                        dropDownState(() {
-                          dropdownvalue = newValue!;
-                        });
-                      },
-                    );
-                  }
-                ),
+                        ),
+                      );
+                    }
+                  ) :
+                  StatefulBuilder(
+                    builder: (BuildContext context, StateSetter dropDownState) {
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.06,
+                        child: DropdownButton<String>(
+                          value: dropdownvalue,
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Color.fromARGB(255, 231, 250, 60),
+                          ),
+                          dropdownColor: const Color.fromARGB(255, 32, 63, 60),
+                          borderRadius: BorderRadius.circular(15.0),
+                          items: items.map((String item2) {
+                            return DropdownMenuItem(
+                              value: item2,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.circle,
+                                    color: stateColors[eventStateFromString(item2)],
+                                    size: 15,
+                                  ),
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.03
+                                  ),
+                                  Text(
+                                    item2,
+                                    style: TextStyle(
+                                      color: const Color.fromARGB(255, 231, 250, 60),
+                                      fontWeight: item2 == dropdownvalue ? FontWeight.bold : FontWeight.normal
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                dropDownState(() {
+                                  dropdownvalue = item2;
+                                });
+                              },
+                            );
+                          }).toList(),
+                          
+                          onChanged: (String? newValue) { 
+                            dropDownState(() {
+                              dropdownvalue = newValue!;
+                            });
+                          },
+                        ),
+                      );
+                    }
+                  ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.01,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          var t = event.getParticipants().indexWhere((element) => element['number'] == participant['number']);
-                          event.getParticipants()[t]["state"] = EventState.values[items.indexOf(dropdownvalue)].index;
-                          participant['state'] = EventState.values[items.indexOf(dropdownvalue)].index;
-                          log(event.getParticipants().toString());
-                          // log(event.toJSON().toString());
-                          FirebaseHelper f = FirebaseHelper();
-                          f.updateDocumentById(
-                            "events_new", 
-                            event.getEid(), 
-                            {'participants': event.getParticipants()}
-                          );
-                        });
-                        log("State changed!");
-                        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ViewEventPage(event: event,)));
-                        Navigator.pop(context);
-                      }, 
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
-                      ),
-                      child: const Text(
-                        "Confirm",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Color.fromARGB(156, 9, 31, 29)
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.04,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.04,
+                        width: MediaQuery.of(context).size.width * 0.2,
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              var t = event.getParticipants().indexWhere((element) => element['number'] == participant['number']);
+                              log("1234");
+                              log(eventStateFromString(dropdownvalue).toString());
+                              event.getParticipants()[t]["state"] = eventStateFromString(dropdownvalue);
+                              participant['state'] = eventStateFromString(dropdownvalue);
+                              log(event.getParticipants().toString());
+                              FirebaseHelper f = FirebaseHelper();
+                              f.updateDocumentById(
+                                "events_new", 
+                                event.getEid(), 
+                                {'participants': event.getParticipants()}
+                              );
+                            });
+                            log("State changed!");
+                            // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ViewEventPage(event: event,)));
+                            Navigator.pop(context);
+                          }, 
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
+                          ),
+                          child: const Text(
+                            "Confirm",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color.fromARGB(156, 9, 31, 29)
+                            ),
+                          )
                         ),
-                      )
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.05,
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      }, 
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
                       ),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Color.fromARGB(156, 9, 31, 29)
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.05,
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.04,
+                        width: MediaQuery.of(context).size.width * 0.2,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }, 
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 239, 255, 100))
+                          ),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color.fromARGB(156, 9, 31, 29)
+                            ),
+                          )
                         ),
-                      )
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -482,11 +563,10 @@ class _ViewEventPageState extends State<ViewEventPage> {
                   onPressed: () {
                     log("Pressed Participant!");
                   }, 
+                  // TODO: only allow if (event started and participant has running status) or event did not start yet
                   onLongPress: () {
                     setState(() {
-                      // log(participant["number"].toString());
-                      dropdownvalue = EventState.values[event.getParticipants()[participant["number"]]["state"]].stateToString();
-                      // log(dropdownvalue.toString());
+                      dropdownvalue = EventState.values[event.getParticipants()[participant["number"]-1]["state"]].stateToString();
                       getAlertDNFParticipantDialog(participant);
                     });
                   },
@@ -606,22 +686,26 @@ class _ViewEventPageState extends State<ViewEventPage> {
                                 const Color.fromRGBO(49, 98, 94, 50),
                               ),
                             ),
-                            onLongPress: () {
-                              removeState(() {
-                                log((data.data()! as Map)['firstname']);
-                                getRemoveDialog((data.data()! as Map)['uid']);
-                              });
-                            }, 
-                            onPressed: () {
-                              removeState(() {
-                                log(result['participant']["number"].toString());
-                                int t = event.getParticipants().indexWhere((element) => element['number'] == result['participant']["number"]);
-                                log(event.getParticipants()[t].toString());
-                                dropdownvalue = EventState.values[event.getParticipants()[t]["state"]].stateToString();
-                                log(dropdownvalue.toString());
-                                getAlertDNFParticipantDialog(result['participant']);
-                              });
-                            },
+                            onLongPress: event.isStarted() ? null : 
+                              () {
+                                removeState(() {
+                                  log((data.data()! as Map)['firstname']);
+                                  getRemoveDialog((data.data()! as Map)['uid']);
+                                });
+                              }, 
+                            onPressed: event.isStarted() && result['participant']['state'] != EventState.running.index ? 
+                              null : 
+                              () {
+                                // TODO: should only be possible if state is not DNF
+                                removeState(() {
+                                  // TODO: apply changes also in result list
+                                  log(result['participant']["number"].toString());
+                                  int t = event.getParticipants().indexWhere((element) => element['number'] == result['participant']["number"]);
+                                  log(event.getParticipants()[t].toString());
+                                  dropdownvalue = EventState.values[event.getParticipants()[t]["state"]].stateToString();
+                                  getAlertDNFParticipantDialog(result['participant']);
+                                });
+                              },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
@@ -643,6 +727,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: result['participant']['number'] < 10 ? 14 : (result['participant']['number'] < 100 ? 13 : 9),
                                       color: const Color.fromARGB(156, 9, 31, 29),
+                                      // color: Colors.white
                                     ),
                                   ),
                                 ),
@@ -652,6 +737,9 @@ class _ViewEventPageState extends State<ViewEventPage> {
                                 Flexible(
                                   child: Text(
                                     getFormatedParticipant(data.data() as Map),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                    ),
                                     textAlign: TextAlign.left,
                                   ),
                                 ),                            
@@ -709,8 +797,6 @@ class _ViewEventPageState extends State<ViewEventPage> {
           {
             'uid': newP,
             'state': 0,
-            'time': "00:00:00",
-            'place': "DNS",
             'number': getNextNumber()
           }
         );
@@ -755,9 +841,12 @@ class _ViewEventPageState extends State<ViewEventPage> {
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.01,
             ),
-            Text(
-              "Participants (" + event.getMaxNumParticipants().toString() + ")",
-              style: getTextStyle(20),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.035,
+              child: Text(
+                "Participants (" + event.getMaxNumParticipants().toString() + ")",
+                style: getTextStyle(20),
+              ),
             ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.01,
@@ -801,16 +890,40 @@ class _ViewEventPageState extends State<ViewEventPage> {
               height: MediaQuery.of(context).size.height * 0.02,
             ),
             SizedBox(
-              width: MediaQuery.of(context).size.width * 0.7,
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: MediaQuery.of(context).size.height * 0.01,
               child: Wrap(
+                alignment: WrapAlignment.center,
+                direction: Axis.horizontal,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * legendsize2,
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.17,
+                    alignment: Alignment.center,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
                           Icons.circle,
                           color: Colors.grey,
+                          size: 15,
+                        ),
+                        Text(
+                          "  None  ",
+                          style: getTextStyle(15),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.17,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: stateColors[1],
                           size: 15,
                         ),
                         Text(
@@ -820,25 +933,11 @@ class _ViewEventPageState extends State<ViewEventPage> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * legendsize,
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.14,
+                    alignment: Alignment.center,
                     child: Row(
-                      children: [
-                        Icon(
-                          Icons.circle,
-                          color: Colors.blue[400],
-                          size: 15,
-                        ),
-                        Text(
-                          "  running  ",
-                          style: getTextStyle(15),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * legendsize2,
-                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.circle,
@@ -852,9 +951,29 @@ class _ViewEventPageState extends State<ViewEventPage> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * legendsize,
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.21,
+                    alignment: Alignment.center,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: Colors.blue[400],
+                          size: 15,
+                        ),
+                        Text(
+                          "  running  ",
+                          style: getTextStyle(15),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.22,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
                           Icons.circle,
@@ -904,9 +1023,12 @@ class _ViewEventPageState extends State<ViewEventPage> {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.01,
                 ),
-                Text(
-                  "Participants (" + event.getParticipants().length.toString() + "/" + event.getMaxNumParticipants().toString() + ")",
-                  style: getTextStyle(20),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.035,
+                  child: Text(
+                    "Participants (" + event.getParticipants().length.toString() + "/" + event.getMaxNumParticipants().toString() + ")",
+                    style: getTextStyle(20),
+                  ),
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.01,
@@ -948,16 +1070,40 @@ class _ViewEventPageState extends State<ViewEventPage> {
                   height: MediaQuery.of(context).size.height * 0.02,
                 ),
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.7,
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  height: MediaQuery.of(context).size.height * 0.01,
                   child: Wrap(
+                    alignment: WrapAlignment.center,
+                    direction: Axis.horizontal,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * legendsize2,
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.17,
+                        alignment: Alignment.center,
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
                               Icons.circle,
                               color: Colors.grey,
+                              size: 15,
+                            ),
+                            Text(
+                              "  None  ",
+                              style: getTextStyle(15),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.17,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              color: stateColors[1],
                               size: 15,
                             ),
                             Text(
@@ -967,25 +1113,11 @@ class _ViewEventPageState extends State<ViewEventPage> {
                           ],
                         ),
                       ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * legendsize,
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.14,
+                        alignment: Alignment.center,
                         child: Row(
-                          children: [
-                            Icon(
-                              Icons.circle,
-                              color: Colors.blue[400],
-                              size: 15,
-                            ),
-                            Text(
-                              "  running  ",
-                              style: getTextStyle(15),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * legendsize2,
-                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               Icons.circle,
@@ -999,9 +1131,29 @@ class _ViewEventPageState extends State<ViewEventPage> {
                           ],
                         ),
                       ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * legendsize,
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.21,
+                        alignment: Alignment.center,
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              color: Colors.blue[400],
+                              size: 15,
+                            ),
+                            Text(
+                              "  running  ",
+                              style: getTextStyle(15),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.22,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
                               Icons.circle,
@@ -1025,13 +1177,11 @@ class _ViewEventPageState extends State<ViewEventPage> {
             ),
           ),
           Positioned(
-            bottom: 60,
+            bottom: 40,
             right: -5,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: event.isStarted() ? null : () {
                 log("Add some Participants to Event");
-                log(_marked.toString());
-                log(markedUsers.toString());
                 getParticipantAddDialog();
               },
               child: const Icon(
@@ -1049,7 +1199,8 @@ class _ViewEventPageState extends State<ViewEventPage> {
                   ),
                 ),
                 backgroundColor: MaterialStateProperty.all<Color>(
-                  const Color.fromARGB(255, 231, 250, 60),
+                  // const Color.fromARGB(255, 231, 250, 60),
+                  event.isStarted() ? const Color.fromARGB(255, 151, 161, 59) : const Color.fromARGB(255, 239, 255, 100)
                 ),
                 minimumSize: MaterialStateProperty.all<Size>(
                   Size(
@@ -1198,7 +1349,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                               ),
                               Container(
                                 width: MediaQuery.of(context).size.width * 0.7,
-                                height: MediaQuery.of(context).size.width * 0.8,
+                                height: MediaQuery.of(context).size.width * 0.67,
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: const Color.fromRGBO(232, 255, 24, 100),
@@ -1819,7 +1970,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                   width: MediaQuery.of(context).size.width * 0.5,
                   height: MediaQuery.of(context).size.height * 0.05,
                   child: ElevatedButton(
-                    onPressed: () async {
+                    onPressed: event.isStarted() ? null : () async {
                       log("Edit Event");
 
                       Navigator.pushReplacement(
@@ -1863,7 +2014,7 @@ class _ViewEventPageState extends State<ViewEventPage> {
                         ),
                       ),
                       backgroundColor: MaterialStateProperty.all<Color>(
-                        const Color.fromARGB(255, 231, 250, 60),
+                        event.isStarted() ? const Color.fromARGB(255, 151, 161, 59) : const Color.fromARGB(255, 239, 255, 100)
                       ),
                     ),
                   ),

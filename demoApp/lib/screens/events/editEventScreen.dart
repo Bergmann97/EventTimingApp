@@ -446,7 +446,7 @@ class _EditEventPageState extends State<EditEventPage> {
                 height: MediaQuery.of(context).size.height * 0.03,
               ),
               const Text(
-                "Create Event",
+                "Edit Event",
                 style: TextStyle(
                   color: Color.fromARGB(255, 231, 250, 60),
                   fontWeight: FontWeight.bold,

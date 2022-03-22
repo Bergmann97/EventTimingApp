@@ -241,15 +241,6 @@ class _ParticipantViewState extends State<ParticipantView> {
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.04,
         ),
-        Center(
-          child: Text(
-            "Your Participants",
-            style: getTextStyle(20),
-          ),
-        ),
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.04,
-        ),
         StreamBuilder<QuerySnapshot>(
             stream: db.collection("participants_new").snapshots(),
             builder: (context, snapshot) {
@@ -359,19 +350,49 @@ class _ParticipantViewState extends State<ParticipantView> {
                     log("What happend here? participants Overview");
                 }
               }
-              return SizedBox(
-                height: MediaQuery.of(context).size.height*0.52,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Wrap(
-                    spacing: 8.0,
-                    runSpacing: 8.0,
-                    alignment: WrapAlignment.center,
-                    children: children,
+
+              if (children.isEmpty) {
+                return SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.58,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.03,
+                      ),
+                      Image.asset(
+                        "lib/assets/Standing_Runner.png",
+                        width: MediaQuery.of(context).size.height*0.1
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.03,
+                      ),
+                      const Text(
+                        "Looks pretty empty here!\n",
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 231, 250, 60),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                ),
-              );
-            },
+                );
+              } else {
+                return SizedBox(
+                  height: MediaQuery.of(context).size.height*0.58,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      alignment: WrapAlignment.center,
+                      children: children,
+                    ),
+                  ),
+                );
+              }
+            }
           ),
       ],
     );

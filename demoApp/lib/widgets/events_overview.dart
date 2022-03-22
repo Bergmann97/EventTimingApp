@@ -184,7 +184,6 @@ class _EventViewState extends State<EventView> {
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.04,
         ),
-        // TODO: View when no event exists
         StreamBuilder<QuerySnapshot>(
             stream: db.collection("events_new").snapshots(),
             builder: (context, snapshot) {
@@ -249,6 +248,7 @@ class _EventViewState extends State<EventView> {
                                   event['participants'],
                                   event['generatedParticipants'], 
                                 );
+                                eventT.setStarted(event["started"]);
                                 log(eventT.toString());
                                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => ViewEventPage(event: eventT,)));
                               },
@@ -309,28 +309,31 @@ class _EventViewState extends State<EventView> {
                         );
                       }
                     } else {
-                      return Column(
-                        children: [
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.03,
-                          ),
-                          Image.asset(
-                            "lib/assets/Standing_Runner.png",
-                            width: MediaQuery.of(context).size.height*0.1
-                          ),
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.03,
-                          ),
-                          const Text(
-                            "Looks pretty empty here!\n",
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 231, 250, 60),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 25,
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.58,
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.03,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                            Image.asset(
+                              "lib/assets/Standing_Runner.png",
+                              width: MediaQuery.of(context).size.height*0.1
+                            ),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.03,
+                            ),
+                            const Text(
+                              "Looks pretty empty here!\n",
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 231, 250, 60),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 25,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       );
                     }
                     break;
@@ -340,32 +343,35 @@ class _EventViewState extends State<EventView> {
               }
 
               if (children.isEmpty) {
-                return Column(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.03,
-                    ),
-                    Image.asset(
-                      "lib/assets/Standing_Runner.png",
-                      width: MediaQuery.of(context).size.height*0.1
-                    ),
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.03,
-                    ),
-                    const Text(
-                      "Looks pretty empty here!\n",
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 231, 250, 60),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 25,
+                return SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.58,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.03,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                      Image.asset(
+                        "lib/assets/Standing_Runner.png",
+                        width: MediaQuery.of(context).size.height*0.1
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.03,
+                      ),
+                      const Text(
+                        "Looks pretty empty here!\n",
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 231, 250, 60),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 );
               } else {
                 return SizedBox(
-                  height: MediaQuery.of(context).size.height*0.6,
+                  height: MediaQuery.of(context).size.height*0.58,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
                     child: Wrap(

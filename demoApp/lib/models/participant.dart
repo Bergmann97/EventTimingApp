@@ -1,22 +1,24 @@
 
 enum EventState {
+  none,
   dns,
   dnf,
   running, 
   finished,
-  none
 }
 
 extension ParseToString on EventState {
   String stateToString() {
     switch (index) {
       case 0:
-        return "DNS";
+        return "NONE";
       case 1:
-        return "DNF";
+        return "DNS";
       case 2:
-        return "RUNNING";
+        return "DNF";
       case 3:
+        return "RUNNING";
+      case 4:
         return "FINISHED";
       default: 
         return "UNKNOWN";

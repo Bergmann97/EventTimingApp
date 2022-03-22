@@ -50,6 +50,7 @@ class Event {
   int _maxNumParticipants = 0;
   List<dynamic> _participants = [];
   bool _generatedParticipants = true;
+  bool _started = false;
 
   Event(
     String eid,
@@ -73,7 +74,6 @@ class Event {
     } else {
       _participants = participants;
     }
-    
   }
 
 
@@ -87,6 +87,7 @@ class Event {
   List<dynamic> getParticipants() => _participants;
 
   bool isGenerated() => _generatedParticipants;
+  bool isStarted() => _started;
 
 // --------------- SETTER ---------------
   setName(String name) {
@@ -103,6 +104,9 @@ class Event {
   }
   setParticipants(List<dynamic> participants) {
     _participants = participants;
+  }
+  setStarted(bool started) {
+    _started = started;
   }
 
 // --------------- ADDER/REMOVER ---------------
@@ -128,7 +132,7 @@ class Event {
     return _name;
   }
 
-  toJSON() {
+  Map<String, dynamic> toJSON() {
     // log(_participants.toString());
     // log(_generatedParticipants.toString());
     // log(_participants.map((e) {

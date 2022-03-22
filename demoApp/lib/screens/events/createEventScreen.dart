@@ -63,10 +63,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
       for (int i = 0; i < int.parse(numParticipantsCtrl.text); i++) {
         participants.add(
           {
-            "number": i,
-            "place": "DNS",
-            "state": EventState.dns.index,
-            "time": "00:00:00"
+            "number": i+1,
+            "state": EventState.none.index,
           }
         );
       }
@@ -91,8 +89,18 @@ class _CreateEventPageState extends State<CreateEventPage> {
       );
 
       log(event.toString());
+      Map<String, dynamic> update = event.toJSON();
+      update["finished"] = false;
+      update["started"] = false;
+      update["result"] = [];
+      update["startedDate"] = {'date': "", 'time': ""};
+      update["finalTime"] = "";
+      update["timeBuffer"] = [];
+      update["maleResults"] = [];
+      update["femaleResults"] = [];
+      update["diverseResults"] = [];
 
-      DocumentReference? res = await fb.addDocument("events_new", event.toJSON());
+      DocumentReference? res = await fb.addDocument("events_new", update);
       fb.updateDocument("events_new", res!, {'eid': res.id});
       Navigator.of(context).pop();
       log("event Created!");
