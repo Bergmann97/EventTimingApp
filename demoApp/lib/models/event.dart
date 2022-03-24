@@ -147,7 +147,7 @@ class Event {
       'maxNumParticipants': _maxNumParticipants,
       // 'participants': _participants,
       'participants': _participants.map((e) {
-        return _generatedParticipants ? e : e.getUID();
+        return _generatedParticipants ? e : e.getPID();
       }).toList(),
       'generatedParticipants': _generatedParticipants,
     };
