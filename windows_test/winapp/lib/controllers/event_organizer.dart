@@ -7,31 +7,33 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventOrganizer {
   static const String eventCollection = "events";
-  FirebaseHelper fb = FirebaseHelper();
 
   createEvent(Event event) async {
-    DocumentReference? eid = await fb.addDocument(eventCollection, event.toJSON());
-    fb.updateDocument(eventCollection, eid!, {'eid': eid});
+    DocumentReference? eid = await FirebaseHelper().addDocument(
+      eventCollection, 
+      event.toJSON()
+    );
+    FirebaseHelper().updateDocument(eventCollection, eid!, {'eid': eid});
   }
 
   getEventById(String eid) {
-    fb.readDocumentById(eventCollection, eid);
+    FirebaseHelper().readDocumentById(eventCollection, eid);
   }
 
   updateEvent(Event event) {
-    fb.updateDocumentById(eventCollection, event.getEID(), event.toJSON());
+    FirebaseHelper().updateDocumentById(eventCollection, event.getEID(), event.toJSON());
   }
 
   updateEventById(String eid, Map<String, dynamic> data) {
-    fb.updateDocumentById(eventCollection, eid, data);
+    FirebaseHelper().updateDocumentById(eventCollection, eid, data);
   }
 
   deleteEvent(Event event) {
-    fb.deleteDocumentById(eventCollection, event.getEID());
+    FirebaseHelper().deleteDocumentById(eventCollection, event.getEID());
   }
 
   deleteEventById(String eid) {
-    fb.deleteDocumentById(eventCollection, eid);
+    FirebaseHelper().deleteDocumentById(eventCollection, eid);
   }
 
   Event fromSnapshot(Map<String, dynamic> snapshot) {
