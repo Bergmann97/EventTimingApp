@@ -1,5 +1,7 @@
 import 'package:winapp/controllers/utils.dart';
+
 import 'dart:developer';
+
 
 class Participant {
   int _number       = -1;
@@ -156,7 +158,7 @@ class CreatedParticipant{
     if (!_events.contains(eid)) {
       _events.add(eid);
     } else {
-      log("Event with eid: " + eid + " already exists for participant!");
+      log('Event with eid: ' + eid + ' already exists for participant!');
     }
   }
   addEvents(List<String> eids) {
@@ -181,7 +183,8 @@ class CreatedParticipant{
   String toString() {
     return _pid + ': ' +
       _firstname + ' ' + _secondname + 
-      ' (' + _sex.getSexLetter() + '/' + getAge().toString() + ')';
+      ' (' + _sex.getSexLetter() + '/' + getAge().toString() + ')' +
+      ' | Events: ' + _events.toString();
   }
 
   Map<String, dynamic> toJSON() {
@@ -196,5 +199,4 @@ class CreatedParticipant{
       'events': _events,
     };
   }
-
 }

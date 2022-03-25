@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:winapp/controllers/utils.dart';
+import 'package:winapp/model/participant.dart';
+
+import 'package:flutter/material.dart';
 import 'dart:developer';
 
-import 'package:winapp/model/participant.dart';
 
 class EventDate {
   String _date = '';
@@ -151,26 +152,38 @@ class Event {
   }
 
   addParticipant(CreatedParticipant participant) {
-    if (_participants.any((element) => element.getPID() == participant.getPID())) {
-      _participants.add(
-        Participant(
-          getNextAvailableNumber(_participants),
-          EventState.none, 
-          participant.getPID(),
-        )
-      );
+    if (_participants.length < _maxNumParticipants && !_generatedParticipants && !_started) {
+      if (!_participants.any((element) => element.getPID() == participant.getPID())) {
+        _participants.add(
+          Participant(
+            getNextAvailableNumber(_participants),
+            EventState.none, 
+            participant.getPID(),
+          )
+        );
+        participant.addEvent(_eid);
+      } else {
+        log('Participant with pid: ' + participant.getPID() + ' already exists in event');
+      }
+    } else {
+      log('You cannot add more Participants or its an event with generated participants or the event already started!');
     }
   }
   addParticipants(List<CreatedParticipant> participants) {
-    for (CreatedParticipant participant in participants) {
-      addParticipant(participant);
+    if (!_generatedParticipants) {
+      for (CreatedParticipant participant in participants) {
+        addParticipant(participant);
+      }
+    } else {
+      log('The event has generated Participants! You cannot add some manually!');
     }
   }
   removeParticipant(CreatedParticipant participant) {
-    if (_participants.any((element) => element.getPID() == participant.getPID())) {
+    if (_participants.any((element) => element.getPID() == participant.getPID()) && !_started) {
       _participants.removeWhere((element) => element.getPID() == participant.getPID());
+      participant.removeEvent(_eid);
     } else {
-      log("There was no Participant with pid: " + participant.getPID());
+      log('There was no Participant with pid: ' + participant.getPID() + ' or the event already started!');
     }
   }
   removeParticipants(List<CreatedParticipant> participants) {
@@ -180,15 +193,23 @@ class Event {
   }
 
   addResult(ResultParticipant result) {
-    if (!_result.contains(result)) {
-      _result.add(result);
-    } else {{
-      log("The Participant was already in Result-List!");
-    }}
+    if (_result.length < _participants.length && _started) {
+      if (!_result.contains(result)) {
+        _result.add(result);
+      } else {{
+        log('The Participant was already in Result-List!');
+      }}
+    } else {
+      log('The Result list has already as many results as number of participants');
+    }
   }
   addResults(List<ResultParticipant> results) {
-    for (ResultParticipant result in results) {
-      addResult(result);
+    if (_started) {
+      for (ResultParticipant result in results) {
+        addResult(result);
+      }
+    } else {
+      log('The Event did not start yet!');
     }
   }
 

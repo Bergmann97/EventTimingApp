@@ -72,5 +72,9 @@ int getNextAvailableNumber(List<Participant> participants) {
       checker++;
     }
   }
-  return numbers.length;
+  if (numbers.isNotEmpty) {
+    return numbers.length+1;
+  } else {
+    return checker;
+  }
 }
