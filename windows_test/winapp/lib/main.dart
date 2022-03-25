@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:winapp/controllers/event_organizer.dart';
 import 'package:winapp/controllers/utils.dart';
 import 'package:winapp/model/event.dart';
 import 'dart:developer';
@@ -68,6 +69,111 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    Event genEvent = Event(
+      "1", 
+      "cid", 
+      "Generated Event", 
+      15, 
+      [], 
+      EventDate(
+        "25.03.2022",
+        "09:00:00"
+      ), 
+      EventDate(
+        "25.03.2022",
+        "20:00:00"
+      ),
+      true
+    );
+
+    log(genEvent.toString());
+    log(genEvent.toJSON().toString());
+
+    Event manEvent = Event(
+      "2", 
+      "cid", 
+      "Manuall Event", 
+      15, 
+      [], 
+      EventDate(
+        "25.03.2019",
+        "09:00:00"
+      ), 
+      EventDate(
+        "25.03.2019",
+        "20:00:00"
+      ),
+      false
+    );
+
+    log(manEvent.toString());
+    log(manEvent.toJSON().toString());
+
+    List<CreatedParticipant> participants = [
+      CreatedParticipant(
+        "1", 
+        "1", 
+        "Max", 
+        "Mustermann", 
+        Sex.diverse, 
+        "01.01.1900", 
+        "email@email.com",
+        []
+      ),
+      CreatedParticipant(
+        "1", 
+        "2", 
+        "Max", 
+        "Bergmann", 
+        Sex.male, 
+        "22.12.1997", 
+        "max@bergmann.com",
+        []
+      ),
+      CreatedParticipant(
+        "1", 
+        "3", 
+        "John", 
+        "Doe", 
+        Sex.male, 
+        "01.01.2000", 
+        "emil@emil.com",
+        []
+      ),
+    ];
+
+    manEvent.addParticipant(
+      participants[0]
+    );
+
+    log(manEvent.getParticipants().toString());
+    
+    manEvent.addParticipants(participants);
+    
+    log(manEvent.getParticipants().toString());
+
+    log(participants[0].toString());
+    log(participants[1].toString());
+    log(participants[2].toString());
+
+    genEvent.addParticipant(participants[0]);
+
+    log(manEvent.getParticipants().toString());
+    manEvent.removeParticipant(participants[0]);
+    log(manEvent.getParticipants().toString());
+    manEvent.removeParticipants(participants);
+    log(manEvent.getParticipants().toString());
+    manEvent.removeParticipant(participants[0]);
+
+    log(participants[0].toString());
+    log(participants[1].toString());
+    log(participants[2].toString());
+
+    // EventOrganizer().createEvent(genEvent);
+
+
+
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //

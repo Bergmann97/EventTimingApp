@@ -88,7 +88,7 @@ class CreatedParticipant{
   Sex _sex	         = Sex.none;
   String _birthdate  = '';
   String _email      = '';
-  final List<String> _events = [];
+  List<String> _events = [];
 
   CreatedParticipant(
     String cid,
@@ -98,6 +98,7 @@ class CreatedParticipant{
     Sex sex,
     String birthdate,
     String email,
+    List<String> events,
   ) {
     _cid = cid;
     _pid = pid;
@@ -106,6 +107,7 @@ class CreatedParticipant{
     _sex = sex;
     _birthdate = birthdate;
     _email = email;
+    _events = events;
   }
 
   String getCID() => _cid;
